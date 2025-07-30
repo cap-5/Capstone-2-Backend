@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 const db = require("./db");
 // const { use } = require("react");
 
-const Receipt = db.define("receipt", {
+const Recipt = db.define("receipt", {
 
     title: {
         type: DataTypes.STRING,
@@ -14,16 +14,16 @@ const Receipt = db.define("receipt", {
         allowNull: false,
     },
 
-    userId: {
+    User_Id: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
 
-    groupId: {
+    Group_Id: {
         type: DataTypes.INTEGER,
         allowNull: true,
     }
 
 });
 
-exports.Receipt = Receipt;
+module.exports = Recipt;
