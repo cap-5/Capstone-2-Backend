@@ -1,5 +1,5 @@
 const db = require("./db");
-const { User } = require("./index");
+const { User, Receipt, Item } = require("./index");
 
 const seed = async () => {
   try {
@@ -14,6 +14,31 @@ const seed = async () => {
 
     console.log(`👤 Created ${users.length} users`);
 
+    const receipts = await Receipt.bulkCreate([
+      {
+        title: "Grocery Shopping",
+        body: "Bought fruits and vegetables",
+        userId: users[0].id,
+        groupId: null
+      },
+      {
+        title: "Electronics Purchase",
+        body: "Bought a new laptop",
+        userId: users[1].id,
+        groupId: groups[0].id
+      },
+    ]);
+
+    console.log(`🧾 Created ${receipts.length} receipts`);
+
+    const items = await Item.bulkCreate([
+      { name: "Apple", price: 1.2, Receipt_id: receipts[0].id },
+      { name: "Banana", price: 0.8, Receipt_id: receipts[0].id },
+      { name: "Laptop", price: 1200, Receipt_id: receipts[1].id },
+    ]);
+
+    console.log(`📦 Created ${items.length} items`)
+    ;
     // Create more seed data here once you've created your models
     // Seed files are a great way to test your database schema!
 
