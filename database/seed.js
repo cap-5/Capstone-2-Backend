@@ -17,6 +17,7 @@ const seed = async () => {
     // Create more seed data here once you've created your models
     // Seed files are a great way to test your database schema!
 
+    const groups = await Group
     console.log("🌱 Seeded the database");
   } catch (error) {
     console.error("Error seeding database:", error);
