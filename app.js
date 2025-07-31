@@ -9,7 +9,7 @@ const apiRouter = require("./api");
 const { router: authRouter } = require("./auth");
 const { db } = require("./database");
 const cors = require("cors");
-
+const initSocketServer = require("./socket-server");
 const PORT = process.env.PORT || 8080;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -41,9 +41,12 @@ const runApp = async () => {
   try {
     await db.sync();
     console.log("✅ Connected to the database");
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
     });
+
+    initSocketServer(server);
+    console.log("🧦 Socket server initialized");
   } catch (err) {
     console.error("❌ Unable to connect to the database:", err);
   }
