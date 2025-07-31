@@ -104,7 +104,7 @@ router.post("/auth0", async (req, res) => {
 // Signup route
 router.post("/signup", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { firstName, lastName, username, profilePic, password } = req.body;
 
     if (!username || !password) {
       return res
@@ -126,7 +126,7 @@ router.post("/signup", async (req, res) => {
 
     // Create new user
     const passwordHash = User.hashPassword(password);
-    const user = await User.create({ username, passwordHash });
+    const user = await User.create({ username, passwordHash, firstName, lastName, profilePic });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -149,7 +149,7 @@ router.post("/signup", async (req, res) => {
 
     res.send({
       message: "User created successfully",
-      user: { id: user.id, username: user.username },
+      user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, profilePic: user.lastName, },
     });
   } catch (error) {
     console.error("Signup error:", error);
