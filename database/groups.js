@@ -14,7 +14,7 @@ const Group = db.define
       allownull: true,
     },
 
-    Receipt_id: {
+    Receipt_Id: {
       type: DataTypes.INTEGER,
       allownull: false,
     },

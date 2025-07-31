@@ -14,7 +14,7 @@ const Item = db.define("item", {
         allowNull: false,
     },
 
-    Receipt_id: {
+    Receipt_Id: {
         type: DataTypes.INTEGER,
         allowNull: false,
     }
