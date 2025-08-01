@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const testDbRouter = require("./test-db");
-const veryfiClient = require("./veryfiClient");
 const veryfiReceipt = require("./veryfiReceipt");
 const users = require("./users");
 
