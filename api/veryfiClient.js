@@ -1,6 +1,3 @@
-const express = require("express");
-const router = express.Router();
-
 require('dotenv').config();
 const axios = require('axios');
 
@@ -27,4 +24,4 @@ async function processDocument(fileName, fileDataBase64) {
   }
 }
 
-module.exports = { processDocument, router };
+module.exports = { processDocument };
