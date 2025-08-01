@@ -6,17 +6,17 @@ const Group = db.define
   {
     Owner: {
       type: DataTypes.INTEGER,
-      allownull: false,
+      allowNull : false,
     },
 
     groupName: {
       type: DataTypes.TEXT,
-      allownull: true,
+      allowNull : true,
     },
 
     Receipt_Id: {
       type: DataTypes.INTEGER,
-      allownull: false,
+      allowNull : true,
     },
   });
 
