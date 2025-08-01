@@ -38,7 +38,7 @@ router.get("/:id", async (req, res) => {
 }
 - items: Array of Objects 
 [
-    {name: string, price: float, Receipt_id: int}
+    {name: string, price: float}, ...
 ]
 */
 router.post("/", async (req, res) => {
