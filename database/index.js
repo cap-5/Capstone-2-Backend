@@ -14,7 +14,6 @@ Item.belongsTo(Receipts, { foreignKey: "Receipt_Id" });
 
 // 3. Users and Groups (Owner)
 User.hasMany(Group, { foreignKey: "Owner" });
-Group.belongsTo(User, { foreignKey: "Owner" });
 
 // 4. Users and Groups (Members)
 Group.belongsToMany(User, { through: "UserGroups" });
