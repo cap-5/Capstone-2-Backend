@@ -49,7 +49,7 @@ router.post("/", async (req, res) => {
 
         // create the new items and associate them with this receipt
         for (let i = 0; i < items.length; i++) {
-            const item = array[i];
+            const item = items[i];
             item.Receipt_id = newReceiptId;
             await newReceipt.createItem(item);
         }
