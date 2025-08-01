@@ -1,6 +1,6 @@
 const db = require("./db");
 const User = require("./user");
-const Receipts = require("./recipts");
+const Receipts = require("./receipt");
 const Item = require("./item");
 const Group = require("./groups");
 

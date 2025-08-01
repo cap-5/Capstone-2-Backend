@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 const db = require("./db");
 // const { use } = require("react");
 
-const Recipt = db.define("receipt", {
+const Receipt = db.define("receipt", {
 
     title: {
         type: DataTypes.STRING,
@@ -26,4 +26,4 @@ const Recipt = db.define("receipt", {
 
 });
 
-module.exports = Recipt;
+module.exports = Receipt;
