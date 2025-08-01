@@ -14,9 +14,27 @@ router.get("/Allusers", async (req, res) => {
   }
 });
 
-
-
-
-
+router.get("/me", async (req, res) => {
+  try {
+    const userId = 1;
+    const userInfo = await User.findByPk(userId);
+    if (!userInfo) {
+      return res.status(404).json({ error: "user not found" });
+    }
+    res.send({
+      message: "SOMTHING",
+      userInfo: {
+        username: userInfo.username,
+        profilePic: userInfo.profilePic,
+        email: userInfo.email,
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
+      },
+    });
+  } catch (err) {
+    console.error("this is not working", err);
+    res.status(500).json({ message: "internal server error" });
+  }
+});
 
 module.exports = router;
