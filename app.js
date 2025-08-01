@@ -28,6 +28,13 @@ app.use(cookieParser());
 
 app.use(morgan("dev")); // logging middleware
 app.use(express.static(path.join(__dirname, "public"))); // serve static files from public folder
+
+//test for group
+app.use((req, res, next) => {
+  req.user = { id: 1 }; // mock user id 1
+  next();
+});
+
 app.use("/api", apiRouter); // mount api router
 app.use("/auth", authRouter); // mount auth router
 
