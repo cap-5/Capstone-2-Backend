@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const db = require("./db");
 
-const Receipt = db.define("receipt", {
+const Receipts = db.define("Receipts", {
 
     title: {
         type: DataTypes.STRING,
@@ -25,4 +25,4 @@ const Receipt = db.define("receipt", {
 
 });
 
-module.exports = Receipt;
+module.exports = Receipts;

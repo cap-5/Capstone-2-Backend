@@ -4,7 +4,7 @@ const db = require("./db");
 const Group = db.define("groups", {
   Owner: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   groupName: {
     type: DataTypes.TEXT,
