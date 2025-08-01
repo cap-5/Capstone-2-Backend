@@ -3,6 +3,20 @@ const db = require("./db");
 const bcrypt = require("bcrypt");
 
 const User = db.define("user", {
+  firstName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      len: [1, 30],
+    }
+  },
+  lastName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      len: [1, 30],
+    }
+  },
   username: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -17,6 +31,14 @@ const User = db.define("user", {
     unique: true,
     validate: {
       isEmail: true,
+    },
+  },
+  profilePic: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "https://i.imgur.com/placeholder.png",
+    validate: {
+      isUrl: true,
     },
   },
   auth0Id: {
