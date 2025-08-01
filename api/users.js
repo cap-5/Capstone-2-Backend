@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { adminAuthenticate, authenticateJWT } = require("../auth");
-const { User, Group } = require("../database");
+const { authenticateJWT } = require("../auth");
+const { User, Group, Receipts } = require("../database");
 
 // get all users
 router.get("/Allusers", async (req, res) => {
@@ -14,21 +14,6 @@ router.get("/Allusers", async (req, res) => {
   }
 });
 
-// create a group
-router.post("/create", async (req, res) => {
-  const { Owner, groupName, Receipt_Id } = req.body;
 
-  if (!Owner) {
-    return res.status(400).json({ error: "Owner is required" });
-  }
-
-  try {
-    const newGroup = await Group.create({ Owner, groupName, Receipt_Id });
-    res.status(201).json(newGroup);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create group" });
-  }
-});
 
 module.exports = router;
