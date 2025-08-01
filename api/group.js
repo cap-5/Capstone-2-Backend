@@ -32,6 +32,22 @@ router.post("/create", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    if (!Group) {
+      return res.status(400).json({ error: "group does not exist" });
+    }
+
+    const url = Number(req.params.id);
+    const deletes = await Group.findByPk(url);
+    await deletes.destroy();
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "faillure" });
+  }
+});
+
 
 
 module.exports = router;
