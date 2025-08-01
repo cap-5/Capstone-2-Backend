@@ -1,10 +1,10 @@
 const { DataTypes } = require("sequelize");
 const db = require("./db");
 
-const groups =
+const Group = db.define
   ("groups",
   {
-    owner: {
+    Owner: {
       type: DataTypes.INTEGER,
       allownull: false,
     },
@@ -14,10 +14,10 @@ const groups =
       allownull: true,
     },
 
-    receiptId: {
+    Receipt_Id: {
       type: DataTypes.INTEGER,
       allownull: false,
     },
   });
 
-module.exports = groups;
+module.exports = Group;

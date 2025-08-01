@@ -1,5 +1,5 @@
 {
-  "name": "capstone-1-backend",
+  "name": "capstone-2-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -22,10 +23,7 @@
     "morgan": "^1.10.0",
     "pg": "^8.16.2",
     "sequelize": "^6.37.7",
-<<<<<<< Updated upstream
-=======
     "socket.io": "^4.8.1",
->>>>>>> Stashed changes
     "tesseract.js": "^6.0.1"
   },
   "devDependencies": {

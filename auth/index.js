@@ -6,6 +6,13 @@ const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+const cookieSettings = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+};
+
 // Middleware to authenticate JWT tokens
 const authenticateJWT = (req, res, next) => {
   const token = req.cookies.token;
@@ -79,12 +86,7 @@ router.post("/auth0", async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    });
+    res.cookie("token", token, cookieSettings);
 
     res.send({
       message: "Auth0 authentication successful",
@@ -140,12 +142,7 @@ router.post("/signup", async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    });
+    res.cookie("token", token, cookieSettings);
 
     res.send({
       message: "User created successfully",
@@ -191,12 +188,7 @@ router.post("/login", async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    });
+    res.cookie("token", token, cookieSettings);
 
     res.send({
       message: "Login successful",
