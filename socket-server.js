@@ -3,14 +3,20 @@ const { Server } = require("socket.io");
 let io;
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
 const corsOptions =
   process.env.NODE_ENV === "production"
     ? {
-        origin: FRONTEND_URL,
-        credentials: true,
+        cors: {
+          origin: FRONTEND_URL,
+          credentials: true,
+        },
       }
     : {
-        cors: "*",
+        cors: {
+          origin: "*",
+          methods: ["GET", "POST"],
+        },
       };
 
 const initSocketServer = (server) => {
@@ -33,3 +39,4 @@ const initSocketServer = (server) => {
 };
 
 module.exports = initSocketServer;
+
