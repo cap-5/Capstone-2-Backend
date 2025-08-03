@@ -3,6 +3,8 @@ const router = express.Router();
 const { authenticateJWT } = require("../auth");
 const { User, Group, Receipts } = require("../database");
 
+// add authenticateJWT later
+
 // get all users
 router.get("/Allusers", async (req, res) => {
   try {
