@@ -3,6 +3,7 @@ const router = express.Router();
 const { adminAuthenticate, authenticateJWT } = require("../auth");
 const { User, Group, Item } = require("../database");
 
+
 router.get("/Allitems", async (req, res) => {
   try {
     const getAll = await Item.findAll();
