@@ -29,7 +29,7 @@ router.post("/create", async (req, res) => {
       Receipt_Id,
     });
 
-    res.status(200).json(newGroup);
+    res.status(201).json({message: "Group created successfully", group: newGroup});
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create group" });
@@ -39,15 +39,25 @@ router.post("/create", async (req, res) => {
 //delete a group (only owner is supposed to this)
 router.delete("/delete/:id", async (req, res) => {
   try {
-    const groupId = Number(req.params.id);
+    const userId = req.user?.id; //logged in user
+    if (!userId) {
+      return res.status(404).json({ error: "Unauthorized" });
+    }
 
+    const groupId = Number(req.params.id);
     const group = await Group.findByPk(groupId);
     if (!group) {
       return res.status(404).json({ error: "Group does not exist" });
     }
 
+    //check if logged-in user is the owner
+    if (group.Owner !== userId) {
+      //403, Forbidden status means the server understood the request but refuses to authorize it
+      return res.status(403).json({ error: "Forbidden: Not group owner" });
+    }
+
     await group.destroy();
-    res.sendStatus(200);
+    res.status(200).json({ message: "Group deleted successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not delete group" });
@@ -84,9 +94,9 @@ router.post("/invite/:invId/accept", async (req, res) => {
         .json({ error: "Invite not found or already handled" });
     }
 
-    const user = await User.findByPk(invite.receiverId);//invite.receiverId
+    const user = await User.findByPk(invite.receiverId); //invite.receiverId
     console.log(user);
-    const group = await Group.findByPk(invite.GroupId);//invite.GroupId
+    const group = await Group.findByPk(invite.GroupId); //invite.GroupId
     console.log(group);
     if (!user || !group) {
       return res.status(404).json({ error: "User or group not found" });
@@ -121,7 +131,7 @@ router.post("/invite/:id/decline", async (req, res) => {
       return res.status(404).json({ error: "User or group not found" });
     }
 
-    //decline invite 
+    //decline invite
     invite.status = "declined";
     await invite.save();
     res.status(200).json({ message: "Invite declined" });
