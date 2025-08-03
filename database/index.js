@@ -3,6 +3,7 @@ const User = require("./user");
 const Receipts = require("./receipts")
 const Item = require("./item");
 const Group = require("./groups");
+const Invite = require("./invite");
 
 // 1. Users and Receipts
 User.hasMany(Receipts, { foreignKey: "User_Id" });
@@ -26,10 +27,20 @@ Receipts.belongsTo(Group, { foreignKey: "Group_Id" });
 //Keeps the group but owner is set to null, is user for some reason removed
 Group.belongsTo(User, { foreignKey: "Owner", onDelete: "SET NULL" });
 
+// 6. Invites
+User.hasMany(Invite, {as: "sentInvites", foreignKey: "senderId" });
+User.hasMany(Invite, {as: "receivedInvites", foreignKey: "receiverId"});
+
+Invite.belongsTo(User, {as: "sender", foreignKey: "senderId" });
+Invite.belongsTo(User, {as: "receiver", foreignKey: "receiverId" });
+Invite.belongsTo(Group, { foreignKey: "GroupId" });
+
+
 module.exports = {
   db,
   User,
   Receipts,
   Item,
   Group,
+  Invite,
 };

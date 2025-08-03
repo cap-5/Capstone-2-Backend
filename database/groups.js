@@ -6,10 +6,18 @@ const Group = db.define("groups", {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+
+  // maybe something we can use?
+    description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+
   groupName: {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  
   Receipt_Id: {
     type: DataTypes.INTEGER,
     allowNull: true,
