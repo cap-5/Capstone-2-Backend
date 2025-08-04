@@ -79,4 +79,19 @@ router.post("/", async (req, res) => {
     }
 });
 
+// DELETE a receipt
+router.delete("/:id", async (req, res) => {
+    try {
+        const receiptId = Number(req.params.id);
+        const receipt = await Receipts.findByPk(receiptId);
+        if (!receipt) {
+            res.status(400).send("Receipt not found");
+        }
+        await receipt.destroy();
+    } catch (error) {
+        console.error("Error deleting receipt:", error);
+        res.status(500).send("Failed to delete receipt.");
+    }
+});
+
 module.exports = router;
