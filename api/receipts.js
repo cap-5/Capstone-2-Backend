@@ -9,7 +9,7 @@ router.get("/", async (req, res) => {
         res.status(200).send(receipts);
     } catch (error) {
         console.error("Error fetching receipts:", error);
-        res.status(500).send("Failed to fetch receipts.");       
+        res.status(500).send("Failed to fetch receipts.");
     }
 });
 
@@ -19,12 +19,30 @@ router.get("/:id", async (req, res) => {
         const receiptId = Number(req.params.id);
         const receipt = await Receipts.findByPk(receiptId);
         if (!receipt) {
-            res.status(400).send("Receipt not found")
-        } 
+            res.status(400).send("Receipt not found");
+        }
         res.status(200).send(receipt);
     } catch (error) {
         console.error("Error fetching receipt by ID:", error);
-        res.status(500).send("Failed to find the receipt you were looking for.");
+        res.status(500).send(
+            "Failed to find the receipt you were looking for.",
+        );
+    }
+});
+
+// GET all items associated with a receipt
+router.get("/:id/items", async (req, res) => {
+    try {
+        const receiptId = Number(req.params.id);
+        const receipt = await Receipts.findByPk(receiptId);
+        if (!receipt) {
+            res.status(400).send("Receipt not found");
+        }
+        const items = await receipt.getItems();
+        res.status(200).send(items);
+    } catch (error) {
+        console.error("Error fetching items by receipt ID:", error);
+        res.status(500).send("Failed to find the items you were looking for.");
     }
 });
 
@@ -43,7 +61,7 @@ router.get("/:id", async (req, res) => {
 */
 router.post("/", async (req, res) => {
     try {
-        const { receipt, items }  = req.body;
+        const { receipt, items } = req.body;
         const newReceipt = await Receipts.create(receipt); // create the new receipt
         const newReceiptId = newReceipt.id; // get the id of the created receipt
 
@@ -54,10 +72,10 @@ router.post("/", async (req, res) => {
             await newReceipt.createItem(item);
         }
 
-        res.status(200).send(receipt)
+        res.status(200).send(receipt);
     } catch (error) {
         console.error("Error posting receipt:", error);
-        res.status(500).send("Failed to post receipt.")
+        res.status(500).send("Failed to post receipt.");
     }
 });
 
