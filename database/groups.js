@@ -5,10 +5,14 @@ const Group = db.define("groups", {
   Owner: {
     type: DataTypes.INTEGER,
     allowNull: true,
+    references: {
+      model: 'User', 
+      key: 'id',
+    },
   },
 
   // maybe something we can use?
-    description: {
+  description: {
     type: DataTypes.TEXT,
     allowNull: true,
   },
@@ -17,7 +21,7 @@ const Group = db.define("groups", {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  
+
   Receipt_Id: {
     type: DataTypes.INTEGER,
     allowNull: true,

@@ -3,11 +3,9 @@ const router = express.Router();
 const { authenticateJWT } = require("../auth");
 const { User, Group, Invite } = require("../database");
 
-//add authenticateJWT later
-
 // create a group
 router.post("/create", async (req, res) => {
-  const userId = req.user?.id;
+  const userId =1;
 
   if (!userId) {
     return res.status(404).json({ error: "Unauthorized" });
@@ -37,7 +35,7 @@ router.post("/create", async (req, res) => {
 });
 
 //delete a group (only owner is supposed to this)
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", authenticateJWT,  async (req, res) => {
   try {
     const userId = req.user?.id; //logged in user
     if (!userId) {
@@ -45,6 +43,11 @@ router.delete("/delete/:id", async (req, res) => {
     }
 
     const groupId = Number(req.params.id);
+
+    if(!groupId){
+      return res.status(400).json({ error: "Group ID is required" });
+    }
+
     const group = await Group.findByPk(groupId);
     if (!group) {
       return res.status(404).json({ error: "Group does not exist" });
@@ -65,12 +68,23 @@ router.delete("/delete/:id", async (req, res) => {
 });
 
 //Create an Invite
-router.post("/invite", async (req, res) => {
+router.post("/invite", authenticateJWT,  async (req, res) => {
   try {
-    const { senderId, receiverId, GroupId } = req.body;
+    const userId = req.user?.id; //logged in user
+    if (!userId) {
+      return res.status(404).json({ error: "Unauthorized" });
+    }
+
+    const { receiverId, GroupId } = req.body;
+
+    const group = await Group.findByPk(GroupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+  
 
     const invite = await Invite.create({
-      senderId,
       receiverId,
       GroupId,
       status: "pending",
@@ -84,7 +98,7 @@ router.post("/invite", async (req, res) => {
 });
 
 //Invite a user to a group(adding)
-router.post("/invite/:invId/accept", async (req, res) => {
+router.post("/invite/:invId/accept", authenticateJWT, async (req, res) => {
   try {
     const invite = await Invite.findByPk(req.params.invId);
 
@@ -115,7 +129,7 @@ router.post("/invite/:invId/accept", async (req, res) => {
 });
 
 //decline an invite
-router.post("/invite/:id/decline", async (req, res) => {
+router.post("/invite/:id/decline", authenticateJWT, async (req, res) => {
   try {
     const invite = await Invite.findByPk(req.params.id);
     if (!invite || invite.status !== "pending") {
