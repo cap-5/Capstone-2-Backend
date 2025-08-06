@@ -6,7 +6,7 @@ const Group = db.define("groups", {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'User', 
+      model: 'users', 
       key: 'id',
     },
   },
