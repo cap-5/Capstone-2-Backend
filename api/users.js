@@ -3,10 +3,8 @@ const router = express.Router();
 const { authenticateJWT } = require("../auth");
 const { User, Group, Receipts } = require("../database");
 
-// add authenticateJWT later
-
 // get all users
-router.get("/Allusers", async (req, res) => {
+router.get("/Allusers", authenticateJWT, async (req, res) => {
   try {
     const getAllUsers = await User.findAll();
     res.status(200).send(getAllUsers);
@@ -16,9 +14,14 @@ router.get("/Allusers", async (req, res) => {
   }
 });
 
-router.get("/me", async (req, res) => {
+router.get("/me", authenticateJWT, async (req, res) => {
   try {
-    const userId = 1;
+    const userId = req.user?.id; // logged in user
+
+    if (!userId) {
+      return res.status(404).json({ error: "Unauthorized" });
+    }
+
     const userInfo = await User.findByPk(userId);
     if (!userInfo) {
       return res.status(404).json({ error: "user not found" });
