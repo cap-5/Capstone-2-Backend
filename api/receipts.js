@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateJWT } = require("../auth");
 const { Receipts, Item, Group } = require("../database");
 
 // GET all receipts
@@ -60,25 +61,34 @@ router.get("/:id/items", async (req, res) => {
 
 //update this where it belongs to user, group ↓
 
-// router.post("/", async (req, res) => {
-//   try {
-//     const { receipt, items } = req.body;
-//     const newReceipt = await Receipts.create(receipt); // create the new receipt
-//     const newReceiptId = newReceipt.id; // get the id of the created receipt
+router.post("/", authenticateJWT,  async (req, res) => {
+  try {
+    const { receipt, items } = req.body;
 
-//     // create the new items and associate them with this receipt
-//     for (let i = 0; i < items.length; i++) {
-//       const item = items[i];
-//       item.Receipt_id = newReceiptId;
-//       await newReceipt.createItem(item);
-//     }
+    
+    const userId = req.user ? req.user.id : null; 
 
-//     res.status(200).send(receipt);
-//   } catch (error) {
-//     console.error("Error posting receipt:", error);
-//     res.status(500).send("Failed to post receipt.");
-//   }
-// });
+ 
+    const newReceipt = await Receipts.create({
+      ...receipt,
+      User_Id: userId, 
+    });
+
+    const newReceiptId = newReceipt.id;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      item.Receipt_id = newReceiptId;
+      await newReceipt.createItem(item);
+    }
+
+    res.status(200).send(newReceipt);
+  } catch (error) {
+    console.error("Error posting receipt:", error);
+    res.status(500).send("Failed to post receipt.");
+  }
+});
+
 
 // DELETE a receipt
 router.delete("/:id", authenticateJWT, async (req, res) => {
