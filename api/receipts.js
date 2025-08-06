@@ -61,17 +61,18 @@ router.get("/:id/items", async (req, res) => {
 
 //update this where it belongs to user, group ↓
 
-router.post("/", authenticateJWT,  async (req, res) => {
+router.post("/", authenticateJWT, async (req, res) => {
   try {
     const { receipt, items } = req.body;
 
-    
-    const userId = req.user ? req.user.id : null; 
 
- 
+    const userId = req.user ? req.user.id : null;
+
+
     const newReceipt = await Receipts.create({
       ...receipt,
-      User_Id: userId, 
+      User_Id: userId,
+      uploaded_by: userId,
     });
 
     const newReceiptId = newReceipt.id;
@@ -132,7 +133,7 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
       return res.status(404).json({ error: "Group does not exist" });
     }
 
-    const { receipt, items } = req.body;
+    const { receipt, items, Category } = req.body;
 
     if (!receipt || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "Receipt and items are required" });
@@ -143,6 +144,7 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
       ...receipt,
       GroupId: groupId,
       uploaded_by: userId,
+      category: Category,
     });
 
     const receiptItems = items.map((item) => ({

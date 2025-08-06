@@ -31,6 +31,12 @@ const Receipts = db.define("receipts", {
       key: "id",
     },
   },
+
+   category: {
+    type: DataTypes.STRING,
+    allowNull: true,
+   },
+
 });
 
 module.exports = Receipts;
