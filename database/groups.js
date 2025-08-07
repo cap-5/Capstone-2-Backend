@@ -6,8 +6,8 @@ const Group = db.define("groups", {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'users', 
-      key: 'id',
+      model: "users",
+      key: "id",
     },
   },
 
