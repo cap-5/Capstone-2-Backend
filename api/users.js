@@ -16,15 +16,15 @@ router.get("/Allusers", async (req, res) => {
   }
 });
 
-router.get("/me", async (req, res) => {
+router.get("/me", authenticateJWT, async (req, res) => {
   try {
-    const userId = 1;
+    const userId = req.user.id;
     const userInfo = await User.findByPk(userId);
     if (!userInfo) {
       return res.status(404).json({ error: "user not found" });
     }
     res.send({
-      message: "SOMTHING",
+      message: "Display user specific info successful",
       userInfo: {
         username: userInfo.username,
         profilePic: userInfo.profilePic,
@@ -34,7 +34,7 @@ router.get("/me", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("this is not working", err);
+    console.error("User info not fetched", err);
     res.status(500).json({ message: "internal server error" });
   }
 });

@@ -5,6 +5,16 @@ const { User, Group, Invite } = require("../database");
 
 //add authenticateJWT later
 
+router.get("./get", async (req, res) => {
+  try {
+    const displayGroups = await Group.findAll();
+    console.log(displayGroups)
+    res.status(200).send(displayGroups);
+  } catch (err) {
+    res.send("can not display all the groups").send(400);
+  }
+});
+
 // create a group
 router.post("/create", async (req, res) => {
   const userId = req.user?.id;
@@ -29,7 +39,9 @@ router.post("/create", async (req, res) => {
       Receipt_Id,
     });
 
-    res.status(201).json({message: "Group created successfully", group: newGroup});
+    res
+      .status(201)
+      .json({ message: "Group created successfully", group: newGroup });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create group" });
