@@ -3,6 +3,22 @@ const router = express.Router();
 const { authenticateJWT } = require("../auth");
 const { User, Group, Invite, UserGroups } = require("../database");
 
+router.get("/myGroups", async (req, res) => {
+  try {
+    const userId = 1;
+    //req.user?.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const getGroups = await user.getGroups();
+    res.status(200).send(getGroups);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch groups" });
+  }
+});
+
 // create a group
 router.post("/create", authenticateJWT, async (req, res) => {
   const userId = req.user?.id;
