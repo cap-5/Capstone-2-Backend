@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const { User, Group, Invite, UserGroups } = require("../database");
+const { User, Group, Invite } = require("../database");
 
 router.get("/myGroups", async (req, res) => {
   try {
