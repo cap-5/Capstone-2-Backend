@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
+const { Receipts, Item } = require("../database");
 
 // Load these from environment variables for security:
 const clientId = process.env.PAYPAL_CLIENT_ID;
@@ -72,5 +73,21 @@ router.post("/capture-order/:orderId", async (req, res) => {
   }
 });
 
-module.exports = router;
+// total amount from a receipt
+router.get("/totalPayment/:receiptId", async (req, res) => {
+  try {
+    const receiptId = req.params.receiptId;
 
+    const items = await Item.findAll({ where: { Receipt_Id: receiptId } });
+
+    //.reduce() method is a tool that allows you to go through an array and combine all the values into a single final result.
+    const total = items.reduce((sum, item) => sum + item.price, 0);
+
+    res.json({ receiptId, total });
+  } catch (err) {
+    console.error("Error calculating total:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+module.exports = router;
