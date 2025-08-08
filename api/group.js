@@ -1,14 +1,48 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const { User, Group, Invite } = require("../database");
+const { User, Group, Invite, UserGroups } = require("../database");
 
-//add authenticateJWT later
+router.patch("/:editGroup", async (req, res) => {
+  try {
+    const id = Number(req.params.editGroup);
+    const groupTOPatch = await Group.findByPk(id);
+    // if (!Group) {
+    //   res.status(500).json({ error: "groups does not exists" });
+    // }
+    await groupTOPatch.update({
+      groupName: req.body.groupName,
+      description: req.body.description,
+    });
+
+    await groupTOPatch.save();
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("can not update groups");
+    res.status(400).json({ error: "not able to work" });
+  }
+});
+
+router.get("/myGroups", async (req, res) => {
+  try {
+    const userId = 1;
+    //req.user?.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const getGroups = await user.getGroups();
+    res.status(200).send(getGroups);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch groups" });
+  }
+});
 
 router.get("./get", async (req, res) => {
   try {
     const displayGroups = await Group.findAll();
-    console.log(displayGroups)
+    console.log(displayGroups);
     res.status(200).send(displayGroups);
   } catch (err) {
     res.send("can not display all the groups").send(400);
@@ -16,14 +50,14 @@ router.get("./get", async (req, res) => {
 });
 
 // create a group
-router.post("/create", async (req, res) => {
+router.post("/create", authenticateJWT, async (req, res) => {
   const userId = req.user?.id;
 
   if (!userId) {
-    return res.status(404).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { description, groupName, Receipt_Id } = req.body;
+  const { description, groupName } = req.body;
   console.log("Request body:", req.body);
 
   try {
@@ -36,7 +70,6 @@ router.post("/create", async (req, res) => {
       Owner: userId,
       description,
       groupName,
-      Receipt_Id,
     });
 
     res
@@ -49,14 +82,19 @@ router.post("/create", async (req, res) => {
 });
 
 //delete a group (only owner is supposed to this)
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", authenticateJWT, async (req, res) => {
   try {
     const userId = req.user?.id; //logged in user
     if (!userId) {
-      return res.status(404).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const groupId = Number(req.params.id);
+
+    if (!groupId) {
+      return res.status(400).json({ error: "Group ID is required" });
+    }
+
     const group = await Group.findByPk(groupId);
     if (!group) {
       return res.status(404).json({ error: "Group does not exist" });
@@ -77,12 +115,61 @@ router.delete("/delete/:id", async (req, res) => {
 });
 
 //Create an Invite
-router.post("/invite", async (req, res) => {
+router.post("/invite", authenticateJWT, async (req, res) => {
   try {
-    const { senderId, receiverId, GroupId } = req.body;
+    const userId = req.user?.id; // logged in user
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { receiverId, GroupId } = req.body;
+
+    const group = await Group.findByPk(GroupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const receiver = await User.findByPk(receiverId);
+    if (!receiver) {
+      return res.status(404).json({ error: "Receiver user not found" });
+    }
+
+    if (receiverId === userId) {
+      return res.status(400).json({ error: "Cannot invite yourself" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "Sender user not found" });
+    }
+
+    // Check if the sender/user is part of the group.
+    // This line fetches all groups the user belongs to, but filters only for the current GroupId.
+    // If the returned array is empty, it means the user is not a member of that group.
+    const groups = await user.getGroups({ where: { id: GroupId } });
+    if (groups.length === 0) {
+      return res
+        .status(403)
+        .json({ error: "You must be part of the group to send invites" });
+    }
+
+    //Check if there is already a pending invite from the same sender to the same receiver for the same group.
+    const existingInvite = await Invite.findOne({
+      where: {
+        senderId: userId,
+        receiverId,
+        GroupId,
+        status: "pending",
+      },
+    });
+
+    if (existingInvite) {
+      return res.status(400).json({ error: "Invite already sent and pending" });
+    }
 
     const invite = await Invite.create({
-      senderId,
+      senderId: userId,
       receiverId,
       GroupId,
       status: "pending",
@@ -96,7 +183,7 @@ router.post("/invite", async (req, res) => {
 });
 
 //Invite a user to a group(adding)
-router.post("/invite/:invId/accept", async (req, res) => {
+router.post("/invite/:invId/accept", authenticateJWT, async (req, res) => {
   try {
     const invite = await Invite.findByPk(req.params.invId);
 
@@ -127,7 +214,7 @@ router.post("/invite/:invId/accept", async (req, res) => {
 });
 
 //decline an invite
-router.post("/invite/:id/decline", async (req, res) => {
+router.post("/invite/:id/decline", authenticateJWT, async (req, res) => {
   try {
     const invite = await Invite.findByPk(req.params.id);
     if (!invite || invite.status !== "pending") {

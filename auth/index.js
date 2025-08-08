@@ -106,7 +106,7 @@ router.post("/auth0", async (req, res) => {
 // Signup route
 router.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, username, profilePic, password } = req.body;
+    const { firstName, lastName, username, password, email, profilePic } = req.body;
 
     if (!username || !password) {
       return res
@@ -128,7 +128,7 @@ router.post("/signup", async (req, res) => {
 
     // Create new user
     const passwordHash = User.hashPassword(password);
-    const user = await User.create({ username, passwordHash, firstName, lastName, profilePic });
+    const user = await User.create({ username, passwordHash, firstName, lastName, email, profilePic });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -146,7 +146,7 @@ router.post("/signup", async (req, res) => {
 
     res.send({
       message: "User created successfully",
-      user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, profilePic: user.lastName, },
+      user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, profilePic: user.profileName, email: user.email },
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -192,7 +192,7 @@ router.post("/login", async (req, res) => {
 
     res.send({
       message: "Login successful",
-      user: { id: user.id, username: user.username },
+      user: { id: user.id, username: user.username, firstName: user.firstName, lastname: user.lastName, email: user.email, profilePic: user.profilePic, },
     });
   } catch (error) {
     console.error("Login error:", error);
