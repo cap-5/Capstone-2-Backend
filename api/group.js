@@ -42,6 +42,9 @@ router.post("/create", authenticateJWT, async (req, res) => {
       groupName,
     });
 
+    //add owner to group
+    await newGroup.addUser(user);
+
     res
       .status(201)
       .json({ message: "Group created successfully", group: newGroup });
