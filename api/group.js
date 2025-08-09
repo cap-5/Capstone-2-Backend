@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const { User, Group, Invite, UserGroups } = require("../database");
+const { User, Group, Invite, UserGroups, Receipts } = require("../database");
 
 router.patch("/:editGroup", async (req, res) => {
   try {
@@ -237,6 +237,27 @@ router.post("/invite/:id/decline", authenticateJWT, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to decline invite" });
+  }
+});
+
+//get a repcipt based of group
+router.get("/:id", async (req, res) => {
+  try {
+    const getUrl = Number(req.params.id);
+    const group = await Group.findByPk(getUrl);
+    if (!Group) {
+      res.sendStatus(500);
+    }
+    if (!Receipts) {
+      res.sendStatus(500);
+    }
+    const groupReceipts = await Receipts.findAll({
+      where: { Group_Id: group.id },
+    });
+    res.status(200).send(groupReceipts);
+  } catch (err) {
+    console.error("can not get groups based of repcipts");
+    res.status(400).json({ error: "not able to find the group" });
   }
 });
 
