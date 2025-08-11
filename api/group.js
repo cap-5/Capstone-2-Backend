@@ -1,7 +1,27 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const { User, Group, Invite, UserGroups } = require("../database");
+const { User, Group, Invite, UserGroups, Receipts } = require("../database");
+
+router.patch("/:editGroup", async (req, res) => {
+  try {
+    const id = Number(req.params.editGroup);
+    const groupTOPatch = await Group.findByPk(id);
+    // if (!Group) {
+    //   res.status(500).json({ error: "groups does not exists" });
+    // }
+    await groupTOPatch.update({
+      groupName: req.body.groupName,
+      description: req.body.description,
+    });
+
+    await groupTOPatch.save();
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("can not update groups");
+    res.status(400).json({ error: "not able to work" });
+  }
+});
 
 router.get("/myGroups", async (req, res) => {
   try {
@@ -16,6 +36,16 @@ router.get("/myGroups", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch groups" });
+  }
+});
+
+router.get("./get", async (req, res) => {
+  try {
+    const displayGroups = await Group.findAll();
+    console.log(displayGroups);
+    res.status(200).send(displayGroups);
+  } catch (err) {
+    res.send("can not display all the groups").send(400);
   }
 });
 
@@ -210,6 +240,27 @@ router.post("/invite/:id/decline", authenticateJWT, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to decline invite" });
+  }
+});
+
+//get a repcipt based of group
+router.get("/:id", async (req, res) => {
+  try {
+    const getUrl = Number(req.params.id);
+    const group = await Group.findByPk(getUrl);
+    if (!Group) {
+      res.sendStatus(500);
+    }
+    if (!Receipts) {
+      res.sendStatus(500);
+    }
+    const groupReceipts = await Receipts.findAll({
+      where: { Group_Id: group.id },
+    });
+    res.status(200).send(groupReceipts);
+  } catch (err) {
+    console.error("can not get groups based of repcipts");
+    res.status(400).json({ error: "not able to find the group" });
   }
 });
 
