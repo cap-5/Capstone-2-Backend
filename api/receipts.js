@@ -116,7 +116,7 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
 //upload a receipt
 router.post("/:id/Upload", authenticateJWT, async (req, res) => {
   try {
-    const userId = req.user?.id; // logged in user
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -130,6 +130,7 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
     if (!group) {
       return res.status(404).json({ error: "Group does not exist" });
     }
+
     const { receipt, items } = req.body;
     const category = receipt.category;
 
@@ -137,7 +138,7 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
       return res.status(400).json({ error: "Receipt and items are required" });
     }
 
-    // Create the receipt
+    // Create the receipt without totalPay first
     const newReceipt = await Receipts.create({
       ...receipt,
       GroupId: groupId,
@@ -145,17 +146,30 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
       category: category,
     });
 
+    // Attach receipt ID to items and bulk create
     const receiptItems = items.map((item) => ({
       ...item,
-      Receipt_Id: newReceipt.id, // note underscore here
+      Receipt_Id: newReceipt.id,
     }));
 
-    await Item.bulkCreate(receiptItems);
+    const createdItems = await Item.bulkCreate(receiptItems);
+
+    // Calculate totalPay from created items
+    //.reduce() method is a tool that allows you to go through an array and combine all the values into a single final result.
+    const totalPay = createdItems.reduce(
+      (sum, item) => sum + parseFloat(item.price),
+      0
+    );
+
+    // Update receipt with totalPay
+    newReceipt.totalPay = Math.round(totalPay * 100) / 100; // round to 2 decimals
+    //update the corresponding row in the database
+    await newReceipt.save();
 
     res.status(201).json({
       message: "Receipt uploaded successfully",
       receipt: newReceipt,
-      items: receiptItems,
+      items: createdItems,
     });
   } catch (err) {
     console.error(err);

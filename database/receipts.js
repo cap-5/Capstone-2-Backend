@@ -22,11 +22,15 @@ const Receipts = db.define("receipts", {
     allowNull: true,
   },
 
-   category: {
+  category: {
     type: DataTypes.STRING,
     allowNull: true,
-   },
+  },
 
+  totalPay: {
+    type: DataTypes.DECIMAL,
+    allowNull: true,
+  },
 });
 
 module.exports = Receipts;
