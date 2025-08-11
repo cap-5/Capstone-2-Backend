@@ -3,26 +3,29 @@ const router = express.Router();
 const { authenticateJWT } = require("../auth");
 const { User, Group, Invite, UserGroups, Receipts } = require("../database");
 
+// Edit Group info
 router.patch("/:editGroup", async (req, res) => {
   try {
     const id = Number(req.params.editGroup);
     const groupTOPatch = await Group.findByPk(id);
-    // if (!Group) {
-    //   res.status(500).json({ error: "groups does not exists" });
-    // }
+
+    if (!groupTOPatch) {
+      return res.status(404).json({ error: "Group does not exist" });
+    }
+
     await groupTOPatch.update({
       groupName: req.body.groupName,
       description: req.body.description,
     });
 
-    await groupTOPatch.save();
     res.sendStatus(200);
   } catch (err) {
-    console.error("can not update groups");
-    res.status(400).json({ error: "not able to work" });
+    console.error("Error updating group:", err);
+    res.status(400).json({ error: "Unable to update group" });
   }
 });
 
+//Check my groups
 router.get("/myGroups", async (req, res) => {
   try {
     const userId = 1;
@@ -39,15 +42,6 @@ router.get("/myGroups", async (req, res) => {
   }
 });
 
-router.get("./get", async (req, res) => {
-  try {
-    const displayGroups = await Group.findAll();
-    console.log(displayGroups);
-    res.status(200).send(displayGroups);
-  } catch (err) {
-    res.send("can not display all the groups").send(400);
-  }
-});
 
 // create a group
 router.post("/create", authenticateJWT, async (req, res) => {

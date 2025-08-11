@@ -94,6 +94,7 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 //get recpit based of user
 router.get("/:id", async (req, res) => {
   try {
