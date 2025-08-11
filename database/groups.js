@@ -11,13 +11,13 @@ const Group = db.define("groups", {
     },
   },
 
-  // maybe something we can use?
-  description: {
+  groupName: {
     type: DataTypes.TEXT,
     allowNull: true,
   },
 
-  groupName: {
+  // maybe something we can use?
+  description: {
     type: DataTypes.TEXT,
     allowNull: true,
   },

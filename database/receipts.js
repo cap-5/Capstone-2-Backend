@@ -22,21 +22,15 @@ const Receipts = db.define("receipts", {
     allowNull: true,
   },
 
-  // Defines foreign key constraint linking this column to the primary key
-  uploaded_by: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: "users",
-      key: "id",
-    },
-  },
-
-   category: {
+  category: {
     type: DataTypes.STRING,
     allowNull: true,
-   },
+  },
 
+  totalPay: {
+    type: DataTypes.DECIMAL,
+    allowNull: true,
+  },
 });
 
 module.exports = Receipts;

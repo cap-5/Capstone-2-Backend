@@ -5,24 +5,23 @@ const { User, Group, Receipts } = require("../database");
 //const { adminAuthenticate, authenticateJWT } = require("../auth");
 const { Op } = require("sequelize"); // Used for case-insenitive matching
 
-
 // get all users
 router.get("/Allusers", authenticateJWT, async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
     const offset = (page - 1) * limit;
 
-    // Build search filter 
+    // Build search filter
     const whereClause = search
       ? {
-        [Op.or]: [
-          { username: { [Op.iLike]: `%${search}%` } },
-          /*{ email: { [Op.iLike]: `%${search}%`} },*/
-        ],
-      }
+          [Op.or]: [
+            { username: { [Op.iLike]: `%${search}%` } },
+            /*{ email: { [Op.iLike]: `%${search}%`} },*/
+          ],
+        }
       : {};
 
-    // This fetches the users and total count 
+    // This fetches the users and total count
     const { count, rows: users } = await User.findAndCountAll({
       where: whereClause,
       limit: parseInt(limit),
@@ -35,7 +34,7 @@ router.get("/Allusers", authenticateJWT, async (req, res) => {
       currentPage: parseInt(page),
       totalPages: Math.ceil(count / limit),
       users,
-    })
+    });
   } catch (err) {
     console.error("error finding all users", err);
     res.status(500).json({ message: "internal server error" });
@@ -55,7 +54,7 @@ router.get("/me", authenticateJWT, async (req, res) => {
       return res.status(404).json({ error: "user not found" });
     }
     res.send({
-      message: "SOMTHING",
+      message: "Display user specific info successful",
       userInfo: {
         username: userInfo.username,
         profilePic: userInfo.profilePic,
@@ -65,7 +64,7 @@ router.get("/me", authenticateJWT, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("this is not working", err);
+    console.error("User info not fetched", err);
     res.status(500).json({ message: "internal server error" });
   }
 });
@@ -82,7 +81,7 @@ router.get("/search", async (req, res) => {
     const users = await User.findAll({
       where: {
         username: {
-          [Op.iLike]: `%${query}%`,  // Matches input anywhere, it is case-insensitive 
+          [Op.iLike]: `%${query}%`, // Matches input anywhere, it is case-insensitive
         },
       },
       attributes: ["id", "username"], // Returns specific user
@@ -93,6 +92,21 @@ router.get("/search", async (req, res) => {
   } catch (error) {
     console.error("Error searching users:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//get recpit based of user
+router.get("/:id", async (req, res) => {
+  try {
+    const urlId = Number(req.params.id);
+    const user = await User.findByPk(urlId);
+    const userReceipts = await Receipts.findAll({
+      where: { User_Id: user.id },
+    });
+    res.status(200).send(userReceipts);
+  } catch (err) {
+    console.error("cant not recive and a recpit baseed of id", err);
+    res.status(500).json({ error: "can not get repictpt based of of user" });
   }
 });
 

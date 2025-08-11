@@ -60,36 +60,34 @@ router.get("/:id/items", async (req, res) => {
 */
 
 //update this where it belongs to user, group ↓
+// router.post("/", authenticateJWT, async (req, res) => {
+//   try {
+//     const { receipt, items } = req.body;
 
-router.post("/", authenticateJWT, async (req, res) => {
-  try {
-    const { receipt, items } = req.body;
+//     console.log("Items received from frontend:", items);
 
+//     const userId = req.user ? req.user.id : null;
 
-    const userId = req.user ? req.user.id : null;
+//     const newReceipt = await Receipts.create({
+//       ...receipt,
+//       User_Id: userId,
+//       uploaded_by: userId,
+//     });
 
+//     const newReceiptId = newReceipt.id;
 
-    const newReceipt = await Receipts.create({
-      ...receipt,
-      User_Id: userId,
-      uploaded_by: userId,
-    });
+//     for (let i = 0; i < items.length; i++) {
+//       const item = items[i];
+//       item.Receipt_id = newReceiptId;
+//       await newReceipt.createItem(item);
+//     }
 
-    const newReceiptId = newReceipt.id;
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      item.Receipt_id = newReceiptId;
-      await newReceipt.createItem(item);
-    }
-
-    res.status(200).send(newReceipt);
-  } catch (error) {
-    console.error("Error posting receipt:", error);
-    res.status(500).send("Failed to post receipt.");
-  }
-});
-
+//     res.status(200).send(newReceipt);
+//   } catch (error) {
+//     console.error("Error posting receipt:", error);
+//     res.status(500).send("Failed to post receipt.");
+//   }
+// });
 
 // DELETE a receipt
 router.delete("/:id", authenticateJWT, async (req, res) => {
@@ -118,7 +116,7 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
 //upload a receipt
 router.post("/:id/Upload", authenticateJWT, async (req, res) => {
   try {
-    const userId = req.user?.id; // logged in user
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -133,36 +131,52 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
       return res.status(404).json({ error: "Group does not exist" });
     }
 
-    const { receipt, items, Category } = req.body;
+    const { receipt, items } = req.body;
+    const category = receipt.category;
 
     if (!receipt || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "Receipt and items are required" });
     }
 
-    // Create the receipt
+    // Create the receipt without totalPay first
     const newReceipt = await Receipts.create({
       ...receipt,
       GroupId: groupId,
-      uploaded_by: userId,
-      category: Category,
+      User_Id: userId,
+      category: category,
     });
 
+    // Attach receipt ID to items and bulk create
     const receiptItems = items.map((item) => ({
       ...item,
-      ReceiptId: newReceipt.id,
+      Receipt_Id: newReceipt.id,
     }));
 
-    await Item.bulkCreate(receiptItems);
+    const createdItems = await Item.bulkCreate(receiptItems);
+
+    // Calculate totalPay from created items
+    //.reduce() method is a tool that allows you to go through an array and combine all the values into a single final result.
+    const totalPay = createdItems.reduce(
+      (sum, item) => sum + parseFloat(item.price),
+      0
+    );
+
+    // Update receipt with totalPay
+    newReceipt.totalPay = Math.round(totalPay * 100) / 100; // round to 2 decimals
+    //update the corresponding row in the database
+    await newReceipt.save();
 
     res.status(201).json({
       message: "Receipt uploaded successfully",
       receipt: newReceipt,
-      items: receiptItems,
+      items: createdItems,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to upload receipt to group" });
   }
 });
+
+
 
 module.exports = router;
