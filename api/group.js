@@ -43,6 +43,25 @@ router.get("/myGroups", async (req, res) => {
 });
 
 
+//check individual group
+router.get("/myGroups/:id", async (req, res) => {
+  try {
+
+    const groupId = Number(req.params.id);
+    const group = await Group.findByPk(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    res.status(200).json(group);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch group" });
+  }
+});
+
+
 // create a group
 router.post("/create", authenticateJWT, async (req, res) => {
   const userId = req.user?.id;
@@ -240,21 +259,27 @@ router.post("/invite/:id/decline", authenticateJWT, async (req, res) => {
 //get a repcipt based of group
 router.get("/:id", async (req, res) => {
   try {
+
     const getUrl = Number(req.params.id);
+
     const group = await Group.findByPk(getUrl);
-    if (!Group) {
-      res.sendStatus(500);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
     }
-    if (!Receipts) {
-      res.sendStatus(500);
-    }
+
     const groupReceipts = await Receipts.findAll({
       where: { Group_Id: group.id },
     });
-    res.status(200).send(groupReceipts);
+
+    // check if no receipts found
+    if (!groupReceipts || groupReceipts.length === 0) {
+      return res.status(404).json({ error: "No receipts found for this group" });
+    }
+    res.status(200).json(groupReceipts);
+
   } catch (err) {
-    console.error("can not get groups based of repcipts");
-    res.status(400).json({ error: "not able to find the group" });
+    console.error("Cannot get group receipts:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

@@ -177,6 +177,42 @@ router.post("/:id/Upload", authenticateJWT, async (req, res) => {
   }
 });
 
+//split the bill by amount of people in the group
+router.post("/:id/split-bill", async (req, res) => {
+  try {
 
+    const receiptId = Number(req.params.id);
+    const receipt = await Receipts.findByPk(receiptId);
+
+    if (!receipt) {
+      return res.status(404).send("Receipt not found");
+    }
+
+    const group = await Group.findByPk(receipt.Group_Id );
+
+    if (!group) {
+      return res.status(404).send("Group not found");
+    }
+
+    const usersInGroup = await group.getUsers();
+
+    const numberOfUsers = usersInGroup.length;
+    if (numberOfUsers === 0) {
+      return res.status(400).send("No users in the group to split the bill");
+    }
+
+    const splitAmount = Math.round((receipt.totalPay / numberOfUsers) * 100) / 100; // round to 2 decimals
+
+    res.status(200).json({
+      message: "Bill split successfully",
+      splitAmount: splitAmount,
+      numberOfUsers: numberOfUsers,
+    });
+  }
+  catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to split the bill" });
+  }
+});
 
 module.exports = router;
