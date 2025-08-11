@@ -246,10 +246,10 @@ router.get("/:id", async (req, res) => {
     const getUrl = Number(req.params.id);
     const group = await Group.findByPk(getUrl);
     if (!Group) {
-      res.sendStatus(500);
+      res.sendStatus(404);
     }
     if (!Receipts) {
-      res.sendStatus(500);
+      res.sendStatus(404);
     }
     const groupReceipts = await Receipts.findAll({
       where: { Group_Id: group.id },
