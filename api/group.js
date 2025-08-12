@@ -130,6 +130,60 @@ router.delete("/delete/:id", authenticateJWT, async (req, res) => {
   }
 });
 
+// Get members of a group
+router.get("/:id/members", async (req, res) => {
+  try {
+    const groupId = Number(req.parans.id);
+    const group = await Group.findByPk(groupId);
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const members = await group.getUsers();
+    res.status(200).json(members);
+  } catch (err) {
+    console.error("Error fetching group members:", err);
+    res.status(500).json({ error: "Failed to fetch group members" });
+  }
+})
+
+//remove a member from a group
+router.delete("/:id/members/:userId", authenticateJWT, async (req, res) => {
+  try {
+
+    const groupId = Number(req.params.id);
+    const userId = Number(req.params.userId);
+
+    const group = await Group.findByPk(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the user is part of the group
+    const isMember = await group.hasUser(user);
+    if (!isMember) {
+      return res.status(400).json({ error: "User is not a member of the group" });
+    }
+
+    if (group.Owner === userId) {
+      // Remove the user from the group
+      await group.removeUser(user);
+      res.status(200).json({ message: "User removed from group successfully" });
+    } else {
+      return res.status(403).json({ error: "Only group owner can remove members" });
+    }
+  } catch (err) {
+    console.error("Error removing member from group:", err);
+    res.status(500).json({ error: "Failed to remove member from group" });
+  }
+})
+
 //Create an Invite
 router.post("/invite", authenticateJWT, async (req, res) => {
   try {
@@ -197,6 +251,33 @@ router.post("/invite", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to create invite" });
   }
 });
+
+
+//get all invites for a user
+router.get("/invites", authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const invites = await Invite.findAll({
+      where: { receiverId: user.id, status: "pending" },
+      include: [{ model: Group }],
+    });
+
+    res.status(200).json(invites);
+
+  } catch (err) {
+    console.error("Error fetching invites:", err);
+    res.status(500).json({ error: "Failed to fetch invites" });
+  }
+
+})
 
 //Invite a user to a group(adding)
 router.post("/invite/:invId/accept", authenticateJWT, async (req, res) => {

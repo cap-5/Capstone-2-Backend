@@ -28,13 +28,12 @@ Receipts.belongsTo(Group, { foreignKey: "Group_Id" });
 Group.belongsTo(User, { foreignKey: "Owner", onDelete: "SET NULL" });
 
 // 6. Invites
-User.hasMany(Invite, {as: "sentInvites", foreignKey: "senderId" });
-User.hasMany(Invite, {as: "receivedInvites", foreignKey: "receiverId"});
+User.hasMany(Invite, { as: "sentInvites", foreignKey: "senderId" });
+User.hasMany(Invite, { as: "receivedInvites", foreignKey: "receiverId" });
 
-Invite.belongsTo(User, {as: "sender", foreignKey: "senderId" });
-Invite.belongsTo(User, {as: "receiver", foreignKey: "receiverId" });
+Invite.belongsTo(User, { as: "sender", foreignKey: "senderId" });
+Invite.belongsTo(User, { as: "receiver", foreignKey: "receiverId" });
 Invite.belongsTo(Group, { foreignKey: "GroupId" });
-
 
 module.exports = {
   db,
