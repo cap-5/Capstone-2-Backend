@@ -26,10 +26,9 @@ router.patch("/:editGroup", async (req, res) => {
 });
 
 //Check my groups
-router.get("/myGroups", async (req, res) => {
+router.get("/myGroups", authenticateJWT, async (req, res) => {
   try {
-    const userId = 1;
-    //req.user?.id;
+    const userId = req.user?.id;
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -133,7 +132,7 @@ router.delete("/delete/:id", authenticateJWT, async (req, res) => {
 // Get members of a group
 router.get("/:id/members", async (req, res) => {
   try {
-    const groupId = Number(req.parans.id);
+    const groupId = Number(req.params.id);
     const group = await Group.findByPk(groupId);
 
     if (!group) {
