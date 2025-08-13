@@ -68,6 +68,24 @@ router.get("/me", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "internal server error" });
   }
 });
+//to update user info.
+router.patch("/:editUser", async (req, res) => {
+  try {
+    const id = Number(req.params.editUser);
+    const userPatch = await User.findByPk(id);
+    await userPatch.update({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      profilePic: req.body.profilePic,
+    });
+    await userPatch.save();
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("can not update user", err);
+    res.sendStatus(400);
+  }
+});
 
 // Search Route (autocomplete)
 router.get("/search", async (req, res) => {
