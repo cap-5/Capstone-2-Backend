@@ -181,8 +181,42 @@ router.delete("/:id/members/:userId", authenticateJWT, async (req, res) => {
     console.error("Error removing member from group:", err);
     res.status(500).json({ error: "Failed to remove member from group" });
   }
-})
+});
 
+//leave a group on your own
+router.post("/:id/leave", authenticateJWT, async (req, res) => {
+  try {
+    const groupId = Number(req.params.id);
+    const userId = req.user?.id; 
+    const group = await Group.findByPk(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const isMember = await group.hasUser(user);
+    if (!isMember) {
+      return res.status(400).json({ error: "You are not a member of this group" });
+    }
+
+    //prevent owner from leaving their own group
+    if (group.Owner === userId) {
+      return res.status(403).json({ error: "Group owner cannot leave the group. Please delete the group instead." });
+    } else {
+      await group.removeUser(user);
+      res.status(200).json({ message: "You have left the group successfully" });
+    }
+
+  } catch (err) {
+    console.error("Error leaving group:", err);
+    res.status(500).json({ error: "Failed to leave group" });
+  }
+
+});
 //Create an Invite
 router.post("/invite", authenticateJWT, async (req, res) => {
   try {
