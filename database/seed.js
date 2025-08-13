@@ -71,6 +71,12 @@ const seed = async () => {
         User_Id: users[1].id,
         Group_Id: groups[1].id,
       },
+      {
+        title: "Testing Assign-Items",
+        body: "testing",
+        User_Id: users[0].id,
+        Group_Id: groups[0].id,
+      },
     ]);
 
     console.log(`🧾 Created ${receipts.length} receipts`);
@@ -78,7 +84,12 @@ const seed = async () => {
     const items = await Item.bulkCreate([
       { name: "Apple", price: 1.2, Receipt_Id: receipts[0].id },
       { name: "Banana", price: 0.8, Receipt_Id: receipts[0].id },
+      
       { name: "Laptop", price: 1200, Receipt_Id: receipts[1].id },
+
+      { name: "Apples", price: 6.0, Receipt_Id: receipts[2].id },
+      { name: "Bananas", price: 6.0, Receipt_Id: receipts[2].id },
+      { name: "Candy", price: 6.0, Receipt_Id: receipts[2].id },
     ]);
 
     console.log(`📦 Created ${items.length} items`);
