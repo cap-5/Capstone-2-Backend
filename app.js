@@ -14,7 +14,8 @@ const PORT = process.env.PORT || 8080;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // body parser middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use(
   cors({
@@ -28,6 +29,13 @@ app.use(cookieParser());
 
 app.use(morgan("dev")); // logging middleware
 app.use(express.static(path.join(__dirname, "public"))); // serve static files from public folder
+
+//test for group
+app.use((req, res, next) => {
+  req.user = { id: 1 }; // mock user id 1
+  next();
+});
+
 app.use("/api", apiRouter); // mount api router
 app.use("/auth", authRouter); // mount auth router
 

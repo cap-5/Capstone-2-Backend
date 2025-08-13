@@ -2,7 +2,23 @@ const { DataTypes } = require("sequelize");
 const db = require("./db");
 const bcrypt = require("bcrypt");
 
-const User = db.define("user", {
+const User = db.define("users", {
+  firstName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      len: [1, 30],
+    }
+  },
+
+  lastName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      len: [1, 30],
+    }
+  },
+
   username: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -11,19 +27,31 @@ const User = db.define("user", {
       len: [3, 20],
     },
   },
+
   email: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     unique: true,
     validate: {
       isEmail: true,
     },
   },
+
+  profilePic: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "https://i.imgur.com/placeholder.png",
+    validate: {
+      isUrl: true,
+    },
+  },
+
   auth0Id: {
     type: DataTypes.STRING,
     allowNull: true,
     unique: true,
   },
+
   passwordHash: {
     type: DataTypes.STRING,
     allowNull: true,
