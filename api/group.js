@@ -187,7 +187,7 @@ router.delete("/:id/members/:userId", authenticateJWT, async (req, res) => {
 router.post("/:id/leave", authenticateJWT, async (req, res) => {
   try {
     const groupId = Number(req.params.id);
-    const userId = req.user?.id; 
+    const userId = req.user?.id;
     const group = await Group.findByPk(groupId);
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
@@ -398,10 +398,49 @@ router.get("/:id", async (req, res) => {
 });
 
 //send request of how much user owns
-router.post("/send-request/:receiptId", async (req, res) => {
-  const {amount} = req.body;
+router.post("/groups/:groupId/receipts/:receiptId/send-request", async (req, res) => {
+  const { groupId, receiptId } = req.params;
+  const { payments } = req.body;
 
-  const payment = await Receipts
+  try {
+    const requestingUserId = req.user?.id;
+
+    if (!requestingUserId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const group = await Group.findByPk(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const receipt = await Receipts.findByPk(receiptId);
+    if (!receipt) {
+      return res.status(404).json({ error: "Receipt not found" });
+    }
+
+    // Verify that the requesting user is a member of the group
+    const user = await User.findByPk(requestingUserId);
+    const isMember = await group.hasUser(user);
+    if (!isMember) {
+      return res.status(403).json({ error: "You are not a member of this group" });
+    }
+
+    //check if owns receipt
+    const userReceipts = await Receipts.findAll({
+      where: { User_Id: requestingUserId, Group_Id: groupId },
+    });
+    //Check if the receipt (from params) is in that list
+    const ownsReceipt = userReceipts.some(r => r.id === receipt.id);
+    if (!ownsReceipt) {
+      return res.status(403).json({ error: "You do not own this receipt" });
+    }
+
+
+  } catch (err) {
+    console.error("Error sending payment request:", err);
+    res.status(500).json({ error: "Failed to send payment request" });
+  }
 })
 
 module.exports = router;
