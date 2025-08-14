@@ -397,4 +397,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+//send request of how much user owns
+router.post("/send-request/:receiptId", async (req, res) => {
+  const {amount} = req.body;
+
+  const payment = await Receipts
+})
+
 module.exports = router;
