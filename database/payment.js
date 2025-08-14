@@ -2,25 +2,34 @@ const { DataTypes } = require("sequelize");
 const db = require("./db");
 
 const Payments = db.define("payments", {
-    
   User_Id: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    comment: "The user who needs to pay",
   },
 
   Receipt_Id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
+    comment: "The receipt this payment is associated with",
   },
 
   Item_Id: {
     type: DataTypes.INTEGER,
     allowNull: true,
+    comment: "Optional item-level payment (if split by item)",
   },
 
   Group_Id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
+    comment: "The group associated with the payment",
+  },
+
+  requesterId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    comment: "The user who sent the request",
   },
 
   paypalOrderId: {
@@ -30,13 +39,15 @@ const Payments = db.define("payments", {
 
   amount: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: true, // stores total paid
+    allowNull: false,
   },
 
   status: {
     type: DataTypes.ENUM("pending", "completed"),
-    allowNull: true,
+    allowNull: false,
+    defaultValue: "pending",
   },
 });
 
 module.exports = Payments;
+
