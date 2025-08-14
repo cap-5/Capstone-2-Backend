@@ -31,6 +31,22 @@ const Receipts = db.define("receipts", {
     type: DataTypes.DECIMAL,
     allowNull: true,
   },
+
+  //Paypal columns
+  paypalOrderId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true, // stores total paid
+  },
+  
+  status: {
+    type: DataTypes.ENUM("pending", "completed"),
+    allowNull: true,
+  },
 });
 
 module.exports = Receipts;
