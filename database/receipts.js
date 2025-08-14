@@ -31,6 +31,7 @@ const Receipts = db.define("receipts", {
     type: DataTypes.DECIMAL,
     allowNull: true,
   },
+  
 });
 
 module.exports = Receipts;

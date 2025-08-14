@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const { User, Group, Invite, UserGroups, Receipts } = require("../database");
+const { User, Group, Invite, UserGroups, Receipts, Payments } = require("../database");
+// const { use } = require("react");
 
 // Edit Group info
 router.patch("/:editGroup", async (req, res) => {
@@ -28,13 +29,18 @@ router.patch("/:editGroup", async (req, res) => {
 //Check my groups
 router.get("/myGroups", authenticateJWT, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.id; // logged in user
     const user = await User.findByPk(userId);
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    const getGroups = await user.getGroups();
-    res.status(200).send(getGroups);
+
+    
+    const memberGroups = await user.getMemberships(); // groups you're a member of
+
+  
+    res.status(200).send(memberGroups);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch groups" });
@@ -85,7 +91,7 @@ router.post("/create", authenticateJWT, async (req, res) => {
     });
 
     //add owner to group
-    await newGroup.addUser(user);
+    await newGroup.addMember(user);
 
     res
       .status(201)
@@ -139,7 +145,7 @@ router.get("/:id/members", async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const members = await group.getUsers();
+    const members = await group.getMembers();
     res.status(200).json(members);
   } catch (err) {
     console.error("Error fetching group members:", err);
@@ -171,6 +177,10 @@ router.delete("/:id/members/:userId", authenticateJWT, async (req, res) => {
     }
 
     if (group.Owner === userId) {
+      return res.status(403).json({ error: "Cannot remove the group owner from the group" });
+    }
+
+    if (group.Owner === userId) {
       // Remove the user from the group
       await group.removeUser(user);
       res.status(200).json({ message: "User removed from group successfully" });
@@ -187,7 +197,7 @@ router.delete("/:id/members/:userId", authenticateJWT, async (req, res) => {
 router.post("/:id/leave", authenticateJWT, async (req, res) => {
   try {
     const groupId = Number(req.params.id);
-    const userId = req.user?.id; 
+    const userId = req.user?.id;
     const group = await Group.findByPk(groupId);
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
@@ -332,7 +342,7 @@ router.post("/invite/:invId/accept", authenticateJWT, async (req, res) => {
     }
 
     //this auto adds a user to a group, and updates the status to accepted
-    await group.addUser(user);
+    await group.addMember(user);
     invite.status = "accepted";
     await invite.save();
 
@@ -396,5 +406,59 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+//send request of how much user owns
+router.post("/groups/:groupId/receipts/:receiptId/send-request", async (req, res) => {
+  const { groupId, receiptId } = req.params;
+  const { payments } = req.body;
+  const requesterId = req.user?.id;
+
+  if (!requesterId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const group = await Group.findByPk(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const receipt = await Receipts.findByPk(receiptId);
+    if (!receipt) {
+      return res.status(404).json({ error: "Receipt not found" });
+    }
+
+    // Check requester is in the group
+    const user = await User.findByPk(requesterId);
+    const isMember = await group.hasUser(user);
+    if (!isMember) {
+      return res.status(403).json({ error: "You are not a member of this group" });
+    }
+
+    // Check they own the receipt
+    if (receipt.User_Id !== requesterId) {
+      return res.status(403).json({ error: "You do not own this receipt" });
+    }
+
+    // Validate payments format
+    if (!Array.isArray(payments) || payments.length === 0) {
+      return res.status(400).json({ error: "No payments provided" });
+    }
+
+    const enrichedPayments = payments.map(payment => ({
+      ...payment,
+      requesterId,
+      status: "pending"
+    }));
+
+    const savedPayments = await Payments.bulkCreate(enrichedPayments);
+
+    res.status(201).json({ message: "Payment requests sent", payments: savedPayments });
+  } catch (err) {
+    console.error("Error sending payment request:", err);
+    res.status(500).json({ error: "Failed to send payment request" });
+  }
+});
+
 
 module.exports = router;

@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 const db = require("./db");
 
 const Invite = db.define("invite", {
+  
   senderId: {
     type: DataTypes.INTEGER,
     allowNull: false,
