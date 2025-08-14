@@ -3,7 +3,7 @@ const axios = require("axios");
 const router = express.Router();
 const { Receipts, Item } = require("../database");
 
-// Load these from environment variables for security:
+// Load these from environment variables for security
 const clientId = process.env.PAYPAL_CLIENT_ID;
 const clientSecret = process.env.PAYPAL_SECRET;
 
@@ -23,16 +23,22 @@ const getAccessToken = async () => {
 // Create order endpoint
 router.post("/create-order", async (req, res) => {
   try {
-    const accessToken = await getAccessToken();
-
-    // Get amount from client or set fixed amount
     const { amount } = req.body;
+
+    if (!amount) {
+      return res.status(400).json({ error: "Amount is required" });
+    }
+
+    // Ensure string with 2 decimals
+    const formattedAmount = parseFloat(amount).toFixed(2);
+
+    const accessToken = await getAccessToken();
 
     const order = await axios.post(
       "https://api-m.sandbox.paypal.com/v2/checkout/orders",
       {
         intent: "CAPTURE",
-        purchase_units: [{ amount: { currency_code: "USD", value: amount } }],
+        purchase_units: [{ amount: { currency_code: "USD", value: formattedAmount } }],
       },
       {
         headers: {
@@ -45,15 +51,20 @@ router.post("/create-order", async (req, res) => {
     res.json(order.data);
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: error.response?.data?.message || "Something went wrong" });
   }
 });
 
 // Capture order endpoint
 router.post("/capture-order/:orderId", async (req, res) => {
   try {
-    const accessToken = await getAccessToken();
     const { orderId } = req.params;
+
+    if (!orderId) {
+      return res.status(400).json({ error: "Order ID is required" });
+    }
+
+    const accessToken = await getAccessToken();
 
     const capture = await axios.post(
       `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
@@ -69,7 +80,7 @@ router.post("/capture-order/:orderId", async (req, res) => {
     res.json(capture.data);
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: error.response?.data?.message || "Something went wrong" });
   }
 });
 
