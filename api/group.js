@@ -260,6 +260,12 @@ router.post("/invite", authenticateJWT, async (req, res) => {
       return res.status(400).json({ error: "Cannot invite yourself" });
     }
 
+    //check if they exits in the group
+    const receiverGroups = await receiver.getMemberships({ where: { id: GroupId } });
+    if (receiverGroups.length > 0) {
+      return res.status(400).json({ error: "User is already in the group" });
+    }
+
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ error: "Sender user not found" });
@@ -268,7 +274,7 @@ router.post("/invite", authenticateJWT, async (req, res) => {
     // Check if the sender/user is part of the group.
     // This line fetches all groups the user belongs to, but filters only for the current GroupId.
     // If the returned array is empty, it means the user is not a member of that group.
-    const groups = await user.getGroups({ where: { id: GroupId } });
+    const groups = await user.getMemberships({ where: { id: GroupId } });
     if (groups.length === 0) {
       return res
         .status(403)
@@ -416,7 +422,8 @@ router.get("/GroupReceipts/:id", async (req, res) => {
 
 //send request of how much user owns
 router.post(
-  "/groups/:groupId/receipts/:receiptId/send-request",
+  "/:groupId/receipts/:receiptId/send-request",
+  authenticateJWT,
   async (req, res) => {
     const { groupId, receiptId } = req.params;
     const { payments } = req.body;
@@ -439,7 +446,7 @@ router.post(
 
       // Check requester is in the group
       const user = await User.findByPk(requesterId);
-      const isMember = await group.hasUser(user);
+      const isMember = await group.hasMember(user);
       if (!isMember) {
         return res
           .status(403)
@@ -461,6 +468,11 @@ router.post(
         requesterId,
         status: "pending",
       }));
+
+      console.log("REQUESTER ID:", requesterId);
+      console.log("GROUP:", group.id);
+      console.log("RECEIPT:", receipt.id);
+      console.log("PAYMENTS TO SAVE:", enrichedPayments);
 
       const savedPayments = await Payments.bulkCreate(enrichedPayments);
 
