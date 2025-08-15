@@ -43,11 +43,10 @@ const Payments = db.define("payments", {
   },
 
   status: {
-    type: DataTypes.ENUM("pending", "completed"),
+    type: DataTypes.ENUM("pending", "partial", "paid"),
     allowNull: false,
     defaultValue: "pending",
   },
 });
 
 module.exports = Payments;
-
