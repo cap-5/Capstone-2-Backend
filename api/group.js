@@ -1,14 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const {
-  User,
-  Group,
-  Invite,
-  UserGroups,
-  Receipts,
-  Payments,
-} = require("../database");
+const { User, Group, Invite, Receipts, Payments } = require("../database");
 // const { use } = require("react");
 
 // Edit Group info
@@ -261,7 +254,9 @@ router.post("/invite", authenticateJWT, async (req, res) => {
     }
 
     //check if they exits in the group
-    const receiverGroups = await receiver.getMemberships({ where: { id: GroupId } });
+    const receiverGroups = await receiver.getMemberships({
+      where: { id: GroupId },
+    });
     if (receiverGroups.length > 0) {
       return res.status(400).json({ error: "User is already in the group" });
     }
@@ -464,8 +459,11 @@ router.post(
       }
 
       const enrichedPayments = payments.map((payment) => ({
-        ...payment,
-        requesterId,
+        User_Id: payment.payerId, // map payerId to User_Id
+        Receipt_Id: receipt.id,
+        Group_Id: group.id,
+        amount: payment.amount,
+        requesterId, // who sent the request
         status: "pending",
       }));
 
@@ -485,5 +483,26 @@ router.post(
     }
   }
 );
+
+router.get("/Payments", authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const viewPayment = await Payments.findAll({
+      where: { User_Id: user.id, status: "pending" },
+      include: [{ model: Group }],
+    });
+
+     res.status(200).json(viewPayment);
+  } catch (error) {
+    console.error("Error to fetch all payments ", error);
+    res.status(500).json({ error: "Failed to fetch all payments" });
+  }
+});
 
 module.exports = router;
