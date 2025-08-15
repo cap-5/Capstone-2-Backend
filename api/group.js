@@ -458,21 +458,36 @@ router.post(
         return res.status(400).json({ error: "No payments provided" });
       }
 
-      const enrichedPayments = payments.map((payment) => ({
-        User_Id: payment.payerId, // map payerId to User_Id
-        Receipt_Id: receipt.id,
-        Group_Id: group.id,
-        amount: payment.amount,
-        requesterId, // who sent the request
-        status: "pending",
-      }));
+      // Fetch existing payments for this receipt and users
+      const existingPayments = await Payments.findAll({
+        where: {
+          Receipt_Id: receipt.id,
+          User_Id: payments.map((p) => p.payerId),
+        },
+      });
 
-      console.log("REQUESTER ID:", requesterId);
-      console.log("GROUP:", group.id);
-      console.log("RECEIPT:", receipt.id);
-      console.log("PAYMENTS TO SAVE:", enrichedPayments);
+      const existingPayerIds = existingPayments.map((p) => p.User_Id);
 
-      const savedPayments = await Payments.bulkCreate(enrichedPayments);
+      // Only create new payments that don't already exist
+      const newPayments = payments
+        //Only users not in existingPayerIds will get a new request.
+        .filter((p) => !existingPayerIds.includes(p.payerId))
+        .map((p) => ({
+          User_Id: p.payerId,
+          Receipt_Id: receipt.id,
+          Group_Id: group.id,
+          amount: p.amount,
+          requesterId,
+          status: "pending",
+        }));
+
+      if (newPayments.length === 0) {
+        return res
+          .status(200)
+          .json({ message: "All payment requests already exist" });
+      }
+
+      const savedPayments = await Payments.bulkCreate(newPayments);
 
       res
         .status(201)
@@ -484,6 +499,7 @@ router.post(
   }
 );
 
+//View users payments
 router.get("/Payments", authenticateJWT, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -498,7 +514,7 @@ router.get("/Payments", authenticateJWT, async (req, res) => {
       include: [{ model: Group }],
     });
 
-     res.status(200).json(viewPayment);
+    res.status(200).json(viewPayment);
   } catch (error) {
     console.error("Error to fetch all payments ", error);
     res.status(500).json({ error: "Failed to fetch all payments" });
