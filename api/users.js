@@ -95,18 +95,29 @@ router.get("/search", async (req, res) => {
   }
 });
 
-//get recpit based of user
-router.get("/:id", async (req, res) => {
+// Get receipts for the logged-in user
+router.get("/user-receipts", authenticateJWT, async (req, res) => {
   try {
-    const urlId = Number(req.params.id);
-    const user = await User.findByPk(urlId);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     const userReceipts = await Receipts.findAll({
       where: { User_Id: user.id },
+      order: [["createdAt", "DESC"]],
     });
-    res.status(200).send(userReceipts);
+
+    res.status(200).json(userReceipts);
   } catch (err) {
-    console.error("cant not recive and a recpit baseed of id", err);
-    res.status(500).json({ error: "can not get repictpt based of of user" });
+    console.error("❌ Failed to fetch receipts for user:", err);
+    res.status(500).json({ error: "Could not fetch receipts for this user" });
   }
 });
 
