@@ -12,7 +12,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("admin123"),
         firstName: "Alice",
         lastName: "Admin",
-        email: "admin@example.com",
+        paypalEmail: "admin@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
       {
@@ -20,7 +20,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("user111"),
         firstName: "Bob",
         lastName: "Builder",
-        email: "bob@example.com",
+        paypalEmail: "bob@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
       {
@@ -28,7 +28,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("user222"),
         firstName: "Carol",
         lastName: "Coder",
-        email: "carol@example.com",
+        paypalEmail: "carol@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
       {
@@ -36,7 +36,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("user333"),
         firstName: "Mike",
         lastName: "Snake",
-        email: "Snake@example.com",
+        paypalEmail: "Snake@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
     ]);

@@ -1,116 +1,83 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
-const { Payments, Receipts } = require("../database");
+const { Payments, User } = require("../database");
+const sendEmail = require("../utils/email");
 
-// Load from env
-const clientId = process.env.PAYPAL_CLIENT_ID;
-const clientSecret = process.env.PAYPAL_SECRET;
-
-// Helper: Get access token
+// Helper to get PayPal access token
 const getAccessToken = async () => {
+  const params = new URLSearchParams();
+  params.append("grant_type", "client_credentials");
+
   const response = await axios.post(
     "https://api-m.sandbox.paypal.com/v1/oauth2/token",
-    "grant_type=client_credentials",
+    params.toString(),
     {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      auth: { username: clientId, password: clientSecret },
+      auth: {
+        username: process.env.PAYPAL_CLIENT_ID,
+        password: process.env.PAYPAL_SECRET,
+      },
     }
   );
+
   return response.data.access_token;
 };
 
-// Accept payment request → create PayPal order
+// Accept payment request, create PayPal order, and send email
 router.post("/Payment/:paymentId/accept", async (req, res) => {
   try {
     const { paymentId } = req.params;
 
-    // Fetch the payment request
-    const payment = await Payments.findByPk(paymentId);
+    const payment = await Payments.findByPk(paymentId, { include: User });
     if (!payment) return res.status(404).json({ error: "Payment not found" });
-    if (payment.status === "paid")
-      return res.status(400).json({ error: "Already paid" });
+    if (payment.status === "paid") return res.status(400).json({ error: "Already paid" });
 
     const accessToken = await getAccessToken();
+    const amountValue = payment.amount ? Number(payment.amount).toFixed(2) : "0.00";
 
     // Create PayPal order
     const order = await axios.post(
       "https://api-m.sandbox.paypal.com/v2/checkout/orders",
       {
         intent: "CAPTURE",
-        purchase_units: [
-          {
-            amount: {
-              currency_code: "USD",
-              value: payment.amount.toFixed(2),
-            },
-          },
-        ],
+        purchase_units: [{ amount: { currency_code: "USD", value: amountValue } }],
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
-    // Save PayPal order ID in payment row
     await payment.update({ paypalOrderId: order.data.id });
 
-    // Send order info to frontend for approval
-    res.json(order.data);
+    // Send email to payer
+    const payer = await User.findByPk(payment.payerId);
+    if (payer?.paypalEmail) {
+      await sendEmail(
+        payer.paypalEmail,
+        "Payment Request",
+        `<p>You have a new payment request of $${payment.amount}.</p>
+         <p><a href="https://yourapp.com/pay/${payment.id}">Pay Now</a></p>`
+      );
+      console.log(`Email sent to ${payer.paypalEmail}`);
+    } else {
+      console.warn("Payer has no paypalEmail, skipping email.");
+    }
+
+    res.json({ message: "Payment accepted, PayPal order created.", orderId: order.data.id });
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to create PayPal order" });
+    res.status(500).json({ error: "Failed to accept payment" });
   }
 });
 
-// Step 2: Capture PayPal payment after frontend approval
-router.post("/Payment/:paymentId/capture/:orderId", async (req, res) => {
+// Simple test route for email sending
+router.get("/test-email", async (req, res) => {
   try {
-    const { paymentId, orderId } = req.params;
-
-    const payment = await Payments.findByPk(paymentId);
-    if (!payment) return res.status(404).json({ error: "Payment not found" });
-
-    const accessToken = await getAccessToken();
-
-    // Capture the payment
-    const capture = await axios.post(
-      `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
-      {},
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-    
-    // Update payment status
-    await payment.update({
-      status: "paid",
-      capturedAmount:
-        capture.data.purchase_units[0].payments.captures[0].amount.value,
-      captureId: capture.data.purchase_units[0].payments.captures[0].id,
-    });
-
-    const receiptPayments = await Payments.findAll({
-      where: { Receipt_Id: payment.Receipt_Id },
-    });
-
-    const allPaid = receiptPayments.every((p) => p.status === "paid");
-
-    await Receipts.update(
-      { status: allPaid ? "paid" : "partial" },
-      { where: { id: payment.Receipt_Id } }
-    );
-
-    res.json(capture.data);
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to capture PayPal payment" });
+    const testEmail = process.env.TEST_EMAIL || "your-email@example.com";
+    await sendEmail(testEmail, "Test Email", "<p>Hello! This is a test.</p>");
+    res.json({ message: `Test email sent to ${testEmail}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send test email" });
   }
 });
 

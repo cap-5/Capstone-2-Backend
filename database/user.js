@@ -28,7 +28,7 @@ const User = db.define("users", {
     },
   },
 
-  email: {
+  paypalEmail: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
