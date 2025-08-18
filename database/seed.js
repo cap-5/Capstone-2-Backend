@@ -12,7 +12,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("admin123"),
         firstName: "Alice",
         lastName: "Admin",
-        paypalEmail: "admin@example.com",
+        email: "admin@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
       {
@@ -20,7 +20,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("user111"),
         firstName: "Bob",
         lastName: "Builder",
-        paypalEmail: "bob@example.com",
+        email: "bob@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
       {
@@ -28,7 +28,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("user222"),
         firstName: "Carol",
         lastName: "Coder",
-        paypalEmail: "carol@example.com",
+        email: "carol@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
       {
@@ -36,7 +36,7 @@ const seed = async () => {
         passwordHash: User.hashPassword("user333"),
         firstName: "Mike",
         lastName: "Snake",
-        paypalEmail: "Snake@example.com",
+        email: "Snake@example.com",
         profilePic: "https://i.pravatar.cc/150?img=1",
       },
     ]);
@@ -84,7 +84,7 @@ const seed = async () => {
     const items = await Item.bulkCreate([
       { name: "Apple", price: 1.2, Receipt_Id: receipts[0].id },
       { name: "Banana", price: 0.8, Receipt_Id: receipts[0].id },
-      
+
       { name: "Laptop", price: 1200, Receipt_Id: receipts[1].id },
 
       { name: "Apples", price: 6.0, Receipt_Id: receipts[2].id },

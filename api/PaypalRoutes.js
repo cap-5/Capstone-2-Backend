@@ -64,17 +64,17 @@ router.post("/Payment/:paymentId/accept", async (req, res) => {
 
     // Send email to payer
     const payer = await User.findByPk(payment.User_Id);
-    if (payer?.paypalEmail) {
+    if (payer?.email) {
       const paypalUrl = `https://www.sandbox.paypal.com/checkoutnow?token=${order.data.id}`;
       await sendEmail(
-        payer.paypalEmail,
+        payer.email,
         "Payment Request",
         `<p>You have a new payment request of $${payment.amount}.</p>
          <p><a href="${paypalUrl}">Pay Now</a></p>`
       );
-      console.log(`Email sent to ${payer.paypalEmail}`);
+      console.log(`Email sent to ${payer.email}`);
     } else {
-      console.warn("Payer has no paypalEmail, skipping email.");
+      console.warn("Payer has no email, skipping email.");
     }
 
     // Respond with PayPal URL
