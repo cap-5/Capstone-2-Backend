@@ -33,7 +33,7 @@ const authenticateJWT = (req, res, next) => {
 // Auth0 authentication route
 router.post("/auth0", async (req, res) => {
   try {
-    const { auth0Id, email, username } = req.body;
+    const { auth0Id, paypalEmail, username } = req.body;
 
     if (!auth0Id) {
       return res.status(400).send({ error: "Auth0 ID is required" });
@@ -42,9 +42,9 @@ router.post("/auth0", async (req, res) => {
     // Try to find existing user by auth0Id first
     let user = await User.findOne({ where: { auth0Id } });
 
-    if (!user && email) {
+    if (!user && paypalEmail) {
       // If no user found by auth0Id, try to find by email
-      user = await User.findOne({ where: { email } });
+      user = await User.findOne({ where: { paypalEmail } });
 
       if (user) {
         // Update existing user with auth0Id
@@ -57,8 +57,8 @@ router.post("/auth0", async (req, res) => {
       // Create new user if not found
       const userData = {
         auth0Id,
-        email: email || null,
-        username: username || email?.split("@")[0] || `user_${Date.now()}`, // Use email prefix as username if no username provided
+        paypalEmail: paypalEmail || null,
+        username: username || paypalEmail?.split("@")[0] || `user_${Date.now()}`, // Use email prefix as username if no username provided
         passwordHash: null, // Auth0 users don't have passwords
       };
 
@@ -80,7 +80,7 @@ router.post("/auth0", async (req, res) => {
         id: user.id,
         username: user.username,
         auth0Id: user.auth0Id,
-        email: user.email,
+        paypalEmail: user.paypalEmail,
       },
       JWT_SECRET,
       { expiresIn: "24h" }
@@ -94,7 +94,7 @@ router.post("/auth0", async (req, res) => {
         id: user.id,
         username: user.username,
         auth0Id: user.auth0Id,
-        email: user.email,
+        paypalEmail: user.paypalEmail,
       },
     });
   } catch (error) {
@@ -106,7 +106,7 @@ router.post("/auth0", async (req, res) => {
 // Signup route
 router.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, username, password, email, profilePic } = req.body;
+    const { firstName, lastName, username, password, paypalEmail, profilePic } = req.body;
 
     if (!username || !password) {
       return res
@@ -128,7 +128,7 @@ router.post("/signup", async (req, res) => {
 
     // Create new user
     const passwordHash = User.hashPassword(password);
-    const user = await User.create({ username, passwordHash, firstName, lastName, email, profilePic });
+    const user = await User.create({ username, passwordHash, firstName, lastName, paypalEmail, profilePic });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -136,7 +136,7 @@ router.post("/signup", async (req, res) => {
         id: user.id,
         username: user.username,
         auth0Id: user.auth0Id,
-        email: user.email,
+        paypalEmail: user.paypalEmail,
       },
       JWT_SECRET,
       { expiresIn: "24h" }
@@ -146,7 +146,7 @@ router.post("/signup", async (req, res) => {
 
     res.send({
       message: "User created successfully",
-      user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, profilePic: user.profileName, email: user.email },
+      user: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName, profilePic: user.profileName, paypalEmail: user.paypalEmail },
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -182,7 +182,7 @@ router.post("/login", async (req, res) => {
         id: user.id,
         username: user.username,
         auth0Id: user.auth0Id,
-        email: user.email,
+        paypalEmail: user.paypalEmail,
       },
       JWT_SECRET,
       { expiresIn: "24h" }
@@ -192,7 +192,7 @@ router.post("/login", async (req, res) => {
 
     res.send({
       message: "Login successful",
-      user: { id: user.id, username: user.username, firstName: user.firstName, lastname: user.lastName, email: user.email, profilePic: user.profilePic, },
+      user: { id: user.id, username: user.username, firstName: user.firstName, lastname: user.lastName, paypalEmail: user.paypalEmail, profilePic: user.profilePic, },
     });
   } catch (error) {
     console.error("Login error:", error);

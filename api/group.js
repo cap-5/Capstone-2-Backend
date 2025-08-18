@@ -503,22 +503,29 @@ router.post(
 router.get("/Payments", authenticateJWT, async (req, res) => {
   try {
     const userId = req.user?.id;
-    const user = await User.findByPk(userId);
 
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     const viewPayment = await Payments.findAll({
-      where: { User_Id: user.id, status: "pending" },
-      include: [{ model: Group }],
+      where: {
+        User_Id: user.id,
+        status: ["pending", "awaiting_payment"], // include awaiting_payment
+      },
+      include: [
+        { model: Group, as: "groupInfo", attributes: ["id", "groupName"] },
+        { model: User, as: "requester", attributes: ["id", "username"] },
+      ],
     });
 
     res.status(200).json(viewPayment);
   } catch (error) {
-    console.error("Error to fetch all payments ", error);
-    res.status(500).json({ error: "Failed to fetch all payments" });
+    console.error("Error fetching payments:", error);
+    res.status(500).json({ error: "Failed to fetch payments" });
   }
 });
+
 
 module.exports = router;

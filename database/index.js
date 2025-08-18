@@ -40,6 +40,7 @@ Invite.belongsTo(Group, { foreignKey: "GroupId" });
 // 7. Payments
 User.hasMany(Payments, { foreignKey: "User_Id" });
 Payments.belongsTo(User, { foreignKey: "User_Id" });
+Payments.belongsTo(User, { as: "requester", foreignKey: "requesterId" });
 
 Receipts.hasMany(Payments, { foreignKey: "Receipt_Id" });
 Payments.belongsTo(Receipts, { foreignKey: "Receipt_Id" });
@@ -49,7 +50,7 @@ Item.hasMany(Payments, { foreignKey: "Item_Id" }); // optional
 Payments.belongsTo(Item, { foreignKey: "Item_Id" });
 
 Group.hasMany(Payments, { foreignKey: "Group_Id" });
-Payments.belongsTo(Group, { foreignKey: "Group_Id" });
+Payments.belongsTo(Group, { foreignKey: "Group_Id", as: "groupInfo" });
 
 module.exports = {
   db,
