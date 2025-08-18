@@ -510,7 +510,10 @@ router.get("/Payments", authenticateJWT, async (req, res) => {
     }
 
     const viewPayment = await Payments.findAll({
-      where: { User_Id: user.id, status: "pending" },
+      where: {
+        User_Id: user.id,
+        status: ["pending", "awaiting_payment"], // include awaiting_payment
+      },
       include: [
         { model: Group, as: "groupInfo", attributes: ["id", "groupName"] },
         { model: User, as: "requester", attributes: ["id", "username"] },
@@ -524,29 +527,5 @@ router.get("/Payments", authenticateJWT, async (req, res) => {
   }
 });
 
-// Get a single payment by ID
-router.get("/Payments/:paymentId", authenticateJWT, async (req, res) => {
-  try {
-    const { paymentId } = req.params;
-    const userId = req.user?.id;
-
-    const payment = await Payments.findOne({
-      where: { id: paymentId, User_Id: userId },
-      include: [
-        { model: Group, as: "groupInfo", attributes: ["id", "groupName"] },
-        { model: User, as: "requester", attributes: ["id", "username", "paypalEmail"] },
-      ],
-    });
-
-    if (!payment) {
-      return res.status(404).json({ error: "Payment not found" });
-    }
-
-    res.status(200).json(payment);
-  } catch (error) {
-    console.error("Error fetching payment:", error);
-    res.status(500).json({ error: "Failed to fetch payment" });
-  }
-});
 
 module.exports = router;

@@ -43,7 +43,7 @@ const Payments = db.define("payments", {
   },
 
   status: {
-    type: DataTypes.ENUM("pending", "partial", "paid"),
+    type: DataTypes.ENUM("pending",  "awaiting_payment", "partial", "paid"),
     allowNull: false,
     defaultValue: "pending",
   },
