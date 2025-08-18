@@ -8,7 +8,7 @@ const User = db.define("users", {
     allowNull: false,
     validate: {
       len: [1, 30],
-    }
+    },
   },
 
   lastName: {
@@ -16,7 +16,7 @@ const User = db.define("users", {
     allowNull: false,
     validate: {
       len: [1, 30],
-    }
+    },
   },
 
   username: {
@@ -28,7 +28,7 @@ const User = db.define("users", {
     },
   },
 
-  paypalEmail: {
+  email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
