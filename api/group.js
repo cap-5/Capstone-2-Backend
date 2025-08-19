@@ -206,7 +206,7 @@ router.post("/:id/leave", authenticateJWT, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const isMember = await group.hasUser(user);
+    const isMember = await group.hasMember(user);
     if (!isMember) {
       return res
         .status(400)
