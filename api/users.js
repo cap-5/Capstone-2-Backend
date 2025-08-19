@@ -121,20 +121,15 @@ router.get("/user-receipts", authenticateJWT, async (req, res) => {
 });
 
 // an user can edit their profile
-router.patch("/:id", authenticateJWT, async (req, res) => {
+router.patch("/me", authenticateJWT, async (req, res) => {
   const userId = req.user?.id;
-  const paramId = parseInt(req.params.id);
 
-  // Prevent editing other users' profiles
-  if (!userId || userId !== paramId) {
-    return res.status(403).json({ message: "Forbidden: You cannot update this user" });
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const { firstName, lastName, email, profilePicture } = req.body;
 
-  console.log("Received update data:", req.body);
-
-  // Sanitize: convert empty strings to null and trim strings
   const updateData = {
     firstName: firstName?.trim() || null,
     lastName: lastName?.trim() || null,
@@ -147,28 +142,19 @@ router.patch("/:id", authenticateJWT, async (req, res) => {
   }
 
   try {
-    const user = await User.findByPk(paramId);
-    if (!user) {
-      console.log(`User with id ${paramId} not found`);
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     await user.update(updateData);
 
-    // Strip sensitive fields like password
     const { passwordHash, ...safeUser } = user.toJSON();
-
-    res.status(200).json({ message: "User updated successfully", user: safeUser });
+    res
+      .status(200)
+      .json({ message: "User updated successfully", user: safeUser });
   } catch (err) {
     console.error("Error updating user:", err);
-
-    if (err.name === "SequelizeUniqueConstraintError") {
-      return res.status(409).json({ message: "Email already in use" });
-    }
-
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
 module.exports = router;
-
