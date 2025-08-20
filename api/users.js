@@ -120,9 +120,6 @@ router.get("/user-receipts", authenticateJWT, async (req, res) => {
   }
 });
 
-
-
-
 // an user can edit their profile
 router.patch("/me", authenticateJWT, async (req, res) => {
   const userId = req.user?.id;

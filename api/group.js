@@ -400,6 +400,7 @@ router.get("/GroupReceipts/:id", async (req, res) => {
 
     const groupReceipts = await Receipts.findAll({
       where: { Group_Id: group.id },
+      order: [["createdAt", "DESC"]], // newest first
     });
 
     // check if no receipts found
@@ -527,5 +528,39 @@ router.get("/Payments", authenticateJWT, async (req, res) => {
   }
 });
 
+// View payments requested BY the user (requester sees who owes them)
+router.get("/RequestedPayments", async (req, res) => {
+  try {
+    const requesterId = 1;
+
+    const requestedPayments = await Payments.findAll({
+      where: {
+        requesterId,
+        status: ["pending", "awaiting_payment", "paid"],
+      },
+      include: [
+        {
+          model: Group,
+          as: "groupInfo",
+          attributes: ["id", "groupName"],
+        },
+        {
+          model: User,
+          as: "payer",
+          attributes: ["id", "username"],
+        },
+        {
+          model: Receipts,
+          attributes: ["id", "title"],
+        },
+      ],
+    });
+
+    res.status(200).json(requestedPayments);
+  } catch (error) {
+    console.error("Error fetching requested payments:", error);
+    res.status(500).json({ error: "Failed to fetch requested payments" });
+  }
+});
 
 module.exports = router;
