@@ -529,9 +529,9 @@ router.get("/Payments", authenticateJWT, async (req, res) => {
 });
 
 // View payments requested BY the user (requester sees who owes them)
-router.get("/RequestedPayments", async (req, res) => {
+router.get("/RequestedPayments", authenticateJWT, async (req, res) => {
   try {
-    const requesterId = 1;
+    const requesterId = req.user?.id;
 
     const requestedPayments = await Payments.findAll({
       where: {
