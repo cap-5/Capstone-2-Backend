@@ -128,18 +128,14 @@ router.patch("/me", authenticateJWT, async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { firstName, lastName, email, profilePicture } = req.body;
+  const { firstName, lastName, email, profilePic } = req.body;
 
-  const updateData = {
-    firstName: firstName?.trim() || null,
-    lastName: lastName?.trim() || null,
-    profilePicture: profilePicture?.trim() || null,
-    updatedAt: new Date(),
-  };
-
-  if (email && email.trim() !== "") {
-    updateData.email = email.trim();
-  }
+  const updateData = {};
+  if (firstName) updateData.firstName = firstName.trim();
+  if (lastName) updateData.lastName = lastName.trim();
+  if (profilePic) updateData.profilePic = profilePic.trim();
+  if (email && email.trim() !== "") updateData.email = email.trim();
+  updateData.updatedAt = new Date();
 
   try {
     const user = await User.findByPk(userId);
