@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../auth");
-const { User, Group, Invite, Receipts, Payments } = require("../database");
-// const { use } = require("react");
+const { db, User, Group, Invite, Receipts, Payments } = require("../database");
 
 // Edit Group info
 router.patch("/:editGroup", async (req, res) => {
@@ -98,32 +97,45 @@ router.post("/create", authenticateJWT, async (req, res) => {
 
 //delete a group (only owner is supposed to this)
 router.delete("/delete/:id", authenticateJWT, async (req, res) => {
+  const t = await db.transaction();
   try {
-    const userId = req.user?.id; //logged in user
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const groupId = Number(req.params.id);
-
     if (!groupId) {
       return res.status(400).json({ error: "Group ID is required" });
     }
 
-    const group = await Group.findByPk(groupId);
+    const group = await Group.findByPk(groupId, { transaction: t });
     if (!group) {
+      await t.rollback();
       return res.status(404).json({ error: "Group does not exist" });
     }
 
-    //check if logged-in user is the owner
     if (group.Owner !== userId) {
-      //403, Forbidden status means the server understood the request but refuses to authorize it
+      await t.rollback();
       return res.status(403).json({ error: "Forbidden: Not group owner" });
     }
 
-    await group.destroy();
+    // Delete dependent records first
+    await Invite.destroy({ where: { GroupId: groupId }, transaction: t });
+    await Payments.destroy({ where: { Group_Id: groupId }, transaction: t });
+    await Receipts.destroy({ where: { Group_Id: groupId }, transaction: t });
+    await db.models.UserGroups.destroy({
+      where: { groupId: groupId },
+      transaction: t,
+    });
+
+    // Delete the group itself
+    await group.destroy({ transaction: t });
+
+    await t.commit();
     res.status(200).json({ message: "Group deleted successfully" });
   } catch (err) {
+    await t.rollback();
     console.error(err);
     res.status(500).json({ error: "Could not delete group" });
   }
@@ -228,6 +240,7 @@ router.post("/:id/leave", authenticateJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to leave group" });
   }
 });
+
 //Create an Invite
 router.post("/invite", authenticateJWT, async (req, res) => {
   try {
