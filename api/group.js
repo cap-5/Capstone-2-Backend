@@ -44,21 +44,21 @@ router.get("/myGroups", authenticateJWT, async (req, res) => {
   }
 });
 
-//check individual group
-router.get("/myGroups/:id", async (req, res) => {
-  try {
-    const groupId = Number(req.params.id);
-    const group = await Group.findByPk(groupId);
-    if (!group) {
-      return res.status(404).json({ error: "Group not found" });
-    }
+// //check individual group
+// router.get("/myGroups/:id", async (req, res) => {
+//   try {
+//     const groupId = Number(req.params.id);
+//     const group = await Group.findByPk(groupId);
+//     if (!group) {
+//       return res.status(404).json({ error: "Group not found" });
+//     }
 
-    res.status(200).json(group);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not fetch group" });
-  }
-});
+//     res.status(200).json(group);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Could not fetch group" });
+//   }
+// });
 
 // create a group
 router.post("/create", authenticateJWT, async (req, res) => {
@@ -141,7 +141,7 @@ router.delete("/delete/:id", authenticateJWT, async (req, res) => {
   }
 });
 
-// Get members of a group, mark owner
+// Get group info/members
 router.get("/:id/members", async (req, res) => {
   try {
     const groupId = Number(req.params.id);
@@ -151,27 +151,27 @@ router.get("/:id/members", async (req, res) => {
 
     let members = await group.getMembers();
 
-    // Include owner at the top if not already included
     let ownerUser = null;
     if (group.Owner) {
       ownerUser = await User.findByPk(group.Owner);
-      //This checks if the members array already contains the owner, members is put right after
       if (ownerUser && !members.some((m) => m.id === ownerUser.id)) {
-        //the first element in the new array (ownerUser), 
         members = [ownerUser, ...members];
       }
     }
 
-    // Add isOwner flag
     members = members.map((m) => ({
       ...m.toJSON(),
       isOwner: m.id === group.Owner,
     }));
 
-    res.status(200).json({ members, owner: ownerUser });
+    res.status(200).json({
+      groupName: group.groupName,
+      members,
+      owner: ownerUser,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch group members" });
+    res.status(500).json({ error: "Failed to fetch group data" });
   }
 });
 
