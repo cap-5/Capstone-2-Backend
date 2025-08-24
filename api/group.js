@@ -445,7 +445,7 @@ router.get("/GroupReceipts/:id", async (req, res) => {
   }
 });
 
-//send request of how much user owns
+// Send request of how much user owes
 router.post(
   "/:groupId/receipts/:receiptId/send-request",
   authenticateJWT,
@@ -488,40 +488,30 @@ router.post(
         return res.status(400).json({ error: "No payments provided" });
       }
 
-      // Fetch existing payments for this receipt and users
+      //  Check if any requests already exist for this receipt
       const existingPayments = await Payments.findAll({
-        where: {
-          Receipt_Id: receipt.id,
-          User_Id: payments.map((p) => p.payerId),
-        },
+        where: { Receipt_Id: receipt.id },
       });
 
-      const existingPayerIds = existingPayments.map((p) => p.User_Id);
-
-      // Only create new payments that don't already exist
-      const newPayments = payments
-        //Only users not in existingPayerIds will get a new request.
-        .filter((p) => !existingPayerIds.includes(p.payerId))
-        .map((p) => ({
-          User_Id: p.payerId,
-          Receipt_Id: receipt.id,
-          Group_Id: group.id,
-          amount: p.amount,
-          requesterId,
-          status: "pending",
-        }));
-
-      if (newPayments.length === 0) {
+      if (existingPayments.length > 0) {
         return res
-          .status(200)
-          .json({ message: "All payment requests already exist" });
+          .status(400)
+          .json({ error: "Payment requests have already been sent for this receipt." });
       }
+
+      // Create all payment requests
+      const newPayments = payments.map((p) => ({
+        User_Id: p.payerId,
+        Receipt_Id: receipt.id,
+        Group_Id: group.id,
+        amount: p.amount,
+        requesterId,
+        status: "pending",
+      }));
 
       const savedPayments = await Payments.bulkCreate(newPayments);
 
-      res
-        .status(201)
-        .json({ message: "Payment requests sent", payments: savedPayments });
+      res.status(201).json({ message: "Payment requests sent", payments: savedPayments });
     } catch (err) {
       console.error("Error sending payment request:", err);
       res.status(500).json({ error: "Failed to send payment request" });
