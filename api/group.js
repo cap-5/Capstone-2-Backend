@@ -44,22 +44,6 @@ router.get("/myGroups", authenticateJWT, async (req, res) => {
   }
 });
 
-// //check individual group
-// router.get("/myGroups/:id", async (req, res) => {
-//   try {
-//     const groupId = Number(req.params.id);
-//     const group = await Group.findByPk(groupId);
-//     if (!group) {
-//       return res.status(404).json({ error: "Group not found" });
-//     }
-
-//     res.status(200).json(group);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Could not fetch group" });
-//   }
-// });
-
 // create a group
 router.post("/create", authenticateJWT, async (req, res) => {
   const userId = req.user?.id;
